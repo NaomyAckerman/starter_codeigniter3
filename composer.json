@@ -1,0 +1,41 @@
+{
+	"description": "PT Alpha Tech Indonesiana - Starter Framework CodeIgniter 3",
+	"name": "alphatech/starter_codeigniter3",
+	"type": "project",
+	"homepage": "https://alphatechin.id",
+	"license": "MIT",
+	"support": {
+		"forum": "http://forum.codeigniter.com/",
+		"wiki": "https://github.com/bcit-ci/CodeIgniter/wiki",
+		"slack": "https://codeigniterchat.slack.com",
+		"source": "https://github.com/bcit-ci/CodeIgniter"
+	},
+	"require": {
+		"php": ">=5.3.7",
+		"vlucas/phpdotenv": "^5.6"
+	},
+	"require-dev": {
+		"mikey179/vfsstream": "1.6.*",
+		"phpunit/phpunit": "4.* || 5.* || 9.*",
+		"fakerphp/faker": "^1.9.1"
+	},
+	"suggest": {
+		"paragonie/random_compat": "Provides better randomness in PHP 5.x"
+	},
+	"scripts": {
+		"storage:link": "php index.php cli link index",
+		"test:coverage": [
+			"@putenv XDEBUG_MODE=coverage",
+			"phpunit --color=always --coverage-text --configuration tests/travis/sqlite.phpunit.xml"
+		],
+		"post-install-cmd": [
+			"php index.php cli link index",
+			"sed -i s/name{0}/name[0]/ vendor/mikey179/vfsstream/src/main/php/org/bovigo/vfs/vfsStream.php",
+			"php -r \"file_put_contents('vendor/.htaccess', 'Order allow,deny' . PHP_EOL . 'Deny from all');\""
+		],
+		"post-update-cmd": [
+			"sed -i s/name{0}/name[0]/ vendor/mikey179/vfsstream/src/main/php/org/bovigo/vfs/vfsStream.php",
+			"php -r \"file_put_contents('vendor/.htaccess', 'Order allow,deny' . PHP_EOL . 'Deny from all');\""
+		]
+	}
+}
