@@ -1,6 +1,6 @@
 APP_NAME="PT Alpha Tech Indonesiana"
 APP_ENV=development
-APP_KEY=base64:CRATR9iVQmn3ECZezjq+3fM/bHWu+hvAjaEOd2PLZ5M=
+APP_KEY=
 APP_URL=
 
 LOG_LEVEL=0

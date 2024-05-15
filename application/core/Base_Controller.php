@@ -38,10 +38,11 @@ class Base_Controller extends MX_Controller
 
 	public function responseJson(array $response = [], int $code = 200)
 	{
-		$this->outpu
+		$this->output
 			->set_status_header($code)
 			->set_content_type('application/json')
-			->set_output(json_encode($response));
+			->set_output(json_encode($response, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES))
+			->_display();
 		exit();
 	}
 
@@ -78,7 +79,7 @@ class Base_Controller extends MX_Controller
 	public function setMeta($key, $value = null)
 	{
 		$keys = is_array($key) ? $key : [$key => $value];
-		array_merge($keys, $this->data['meta']);
+		$this->data['meta'] = (object) array_merge($keys, (array) $this->data['meta']);
 	}
 
 	public function setTheme(string $theme = null, string $layout = null)
