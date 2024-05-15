@@ -7,7 +7,7 @@ class Media extends Base_Controller
 		parent::__construct();
 	}
 
-	public function index($path)
+	public function index($path = null)
 	{
 		if (!$path)
 			show_404();
