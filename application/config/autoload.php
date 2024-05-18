@@ -58,7 +58,8 @@ $autoload['packages'] = [];
 |
 |	$autoload['libraries'] = array('user_agent' => 'ua');
 */
-$autoload['libraries'] = ['session', 'database', 'user_agent', 'email', 'form_validation', 'alpha'];
+$autoload['libraries'] = ['session', 'user_agent', 'email', 'form_validation', 'alpha'];
+if (env('DB_DATABASE')) array_unshift($autoload['libraries'],'database');
 
 /*
 | -------------------------------------------------------------------
