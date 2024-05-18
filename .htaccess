@@ -3,6 +3,16 @@
 # RewriteCond %{HTTPS} off
 # RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
 
+# ? hide a spesific file
+<Files .env*>
+	order allow,deny
+	Deny from all
+</Files>
+<Files env*>
+	order allow,deny
+	Deny from all
+</Files>
+
 RewriteEngine On
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
