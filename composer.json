@@ -23,13 +23,13 @@
 		"paragonie/random_compat": "Provides better randomness in PHP 5.x"
 	},
 	"scripts": {
-		"storage:link": "php index.php cli link index",
+		"storage:link": "php index.php cli link run",
 		"test:coverage": [
 			"@putenv XDEBUG_MODE=coverage",
 			"phpunit --color=always --coverage-text --configuration tests/travis/sqlite.phpunit.xml"
 		],
 		"post-install-cmd": [
-			"php index.php cli link index",
+			"php index.php cli link run",
 			"sed -i s/name{0}/name[0]/ vendor/mikey179/vfsstream/src/main/php/org/bovigo/vfs/vfsStream.php",
 			"php -r \"file_put_contents('vendor/.htaccess', 'Order allow,deny' . PHP_EOL . 'Deny from all');\""
 		],

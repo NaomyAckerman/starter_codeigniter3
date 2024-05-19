@@ -1,13 +1,13 @@
 <?php defined('BASEPATH') or exit('No direct script access allowed');
 
-class Media extends Base_Controller
+class Media extends Test_Controller
 {
 	public function __construct()
 	{
 		parent::__construct();
 	}
 
-	public function index($secure_path = null)
+	public function path($secure_path = null)
 	{
 		if (!$secure_path)
 			show_404();
@@ -19,11 +19,14 @@ class Media extends Base_Controller
 		$file = str_replace('/', '\\', ASSETPATH . 'storage' . DIRECTORY_SEPARATOR . $path);
 		if (!file_exists($file))
 			show_404();
-		$mime_type = mime_content_type($file);
-		if ($mime_type == 'directory')
-			show_404();
-		header('Content-Type: ' . $mime_type);
-		echo file_get_contents($file);
-		exit;
+		$this->responseJson([
+			"Support curl" => (extension_loaded('curl') ? 'Active' : 'Inactive'),
+			"Support allow_url_fopen" => (ini_get('allow_url_fopen') ? 'Active' : 'Inactive'),
+			"Path Info" => pathinfo($file),
+			"Secure Path" => $secure_path . $ext,
+			"Path" => $path,
+			"Full Path" => $file,
+			"Link" => storage($path, true)
+		]);
 	}
 }

@@ -1,31 +1,5 @@
 <?php defined('BASEPATH') or exit('No direct script access allowed');
 
-if (!function_exists('asset')) {
-	/**
-	 * Generate an asset url for the application.
-	 *
-	 * @param  string  $path
-	 * @return string
-	 */
-	function asset($path = "")
-	{
-		return base_url("assets/$path");
-	}
-}
-
-if (!function_exists('storage')) {
-	/**
-	 * Generate an storage url for the application.
-	 *
-	 * @param  string  $path
-	 * @return string
-	 */
-	function storage($path = "")
-	{
-		return base_url("assets/storage/$path");
-	}
-}
-
 if (!function_exists('to_bytes')) {
 	/**
 	 * to_bytes

@@ -361,9 +361,11 @@ class MY_Form_validation extends CI_Form_validation
 			$mime_config = &get_mimes();
 			$file_ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
 			$file_mime = strtolower($file['tmp_name'] ? mime_content_type($file['tmp_name']) : '');
-			$invalid_ext = !in_array($file_ext, $allow_type);
-			$invalid_mime = !in_array($file_mime, $mime_config[$file_ext]);
-			if (($invalid_ext || $invalid_mime)) {
+			$list_mime = $mime_config[$file_ext] ?? [];
+			$list_mime = is_array($list_mime) ? $list_mime : [$list_mime];
+			$valid_ext = in_array($file_ext, $allow_type);
+			$valid_mime = in_array($file_mime, $list_mime);
+			if ((!$valid_ext || !$valid_mime)) {
 				return false;
 			}
 			return true;

@@ -847,7 +847,43 @@ if ( ! function_exists('function_usable'))
 		return FALSE;
 	}
 
-	// Cutome Functions
+	// ? Cutome Functions
+
+	if (!function_exists('asset')) {
+		/**
+		 * Generate an asset url for the application.
+		 *
+		 * @param  string  $path
+		 * @return string
+		 */
+		function asset($path = "")
+		{
+			return base_url("assets/$path");
+		}
+	}
+	
+	if (!function_exists('storage')) {
+		/**
+		 * Generate an storage url for the application.
+		 *
+		 * @param  string  $path
+		 * @param  bool  $secure
+		 * @return string
+		 */
+		function storage($path = "",$secure = false)
+		{
+			if ($secure) {
+				$path_info = pathinfo($path);
+				$ext = $path_info['extension'] ?? '';
+				$ext = strtolower($ext ? ".$ext" : '');
+				$path = $path_info['dirname'] . DIRECTORY_SEPARATOR . $path_info['filename'];
+				$secure_path = urlencode(base64_encode($path)) . $ext; 
+				return base_url("media/$secure_path");
+			}
+			return asset("storage/$path");
+		}
+	}
+
 	if (!function_exists('html_escape_decode')) {		
 		/**
 		 * html_escape_decode

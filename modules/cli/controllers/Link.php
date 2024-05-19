@@ -7,13 +7,8 @@ class Link extends Cli_Controller
 		parent::__construct();
 	}
 
-	public function test()
-	{
-		echo "test";
-	}
-
-	// ? run : composer storage:link || php index.php link index
-	public function index()
+	// ? run : composer storage:link || php index.php link run
+	public function run()
 	{
 		$target = config_item('upload_path');
 		$link = ASSETPATH . 'storage';

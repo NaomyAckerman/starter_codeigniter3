@@ -91,7 +91,7 @@ class Base_Controller extends MX_Controller
 		if ($theme) {
 			$this->data['meta']->theme = $theme;
 			$this->theme = $theme;
-			$this->config->set_item('error_views_path', FCPATH . "themes/$theme/errors/");
+			// $this->config->set_item('error_views_path', FCPATH . "themes/$theme/errors/");
 		}
 		return $this;
 	}
