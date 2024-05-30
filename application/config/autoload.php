@@ -59,7 +59,8 @@ $autoload['packages'] = [];
 |	$autoload['libraries'] = array('user_agent' => 'ua');
 */
 $autoload['libraries'] = ['session', 'user_agent', 'email', 'form_validation', 'alpha'];
-if (env('DB_DATABASE')) array_unshift($autoload['libraries'],'database');
+if (env('DB_DATABASE'))
+	array_unshift($autoload['libraries'], 'database');
 
 /*
 | -------------------------------------------------------------------
@@ -134,3 +135,15 @@ $autoload['language'] = [];
 |	$autoload['model'] = array('first_model' => 'first');
 */
 $autoload['model'] = [];
+
+
+/*
+| -------------------------------------------------------------------
+|  Auto-load Traits
+| -------------------------------------------------------------------
+| Prototype:
+|
+|	$autoload['traits'] = array('trait1', 'trait2');
+|
+*/
+$autoload['traits'] = ['ci_instance'];

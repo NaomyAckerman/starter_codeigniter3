@@ -2,11 +2,9 @@
 
 class Alpha
 {
-	protected $ci;
-
+	use CI_Instance;
 	public function __construct()
 	{
-		$this->ci = &get_instance();
 	}
 }
 

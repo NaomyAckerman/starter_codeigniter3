@@ -14,15 +14,13 @@
 
 class MY_Form_validation extends CI_Form_validation
 {
-	protected $CI;
+	use CI_Instance;
 
 	public function __construct()
 	{
 		parent::__construct();
-		$this->CI = &get_instance();
-
-		if ($this->CI->input->method(true) !== 'GET')
-			$this->set_data($this->CI->input->post());
+		if ($this->input->method(true) !== 'GET')
+			$this->set_data($this->input->post());
 	}
 
 	public function _execute($row, $rules, $postdata = NULL, $cycles = 0)
@@ -108,12 +106,12 @@ class MY_Form_validation extends CI_Form_validation
 				// Call the function that corresponds to the rule
 				if ($callback or $callable) {
 					if ($callback) {
-						if (!method_exists($this->CI, $rule)) {
+						if (!method_exists($this, $rule)) {
 							// log_message('debug', 'Unable to find callback validation rule: ' . $rule);
 							$result = FALSE;
 						} else {
 							// Run the function and grab the result
-							$result = $this->CI->$rule($postdata, $param);
+							$result = $this->$rule($postdata, $param);
 						}
 					} else {
 						$result = is_array($rule)
@@ -174,9 +172,9 @@ class MY_Form_validation extends CI_Form_validation
 						$line = $this->_field_data[$row['field']]['errors'][$rule];
 					} elseif (!isset($this->_error_messages[$rule])) {
 						if (
-							FALSE === ($line = $this->CI->lang->line('form_validation_' . $rule))
+							FALSE === ($line = $this->lang->line('form_validation_' . $rule))
 							// DEPRECATED support for non-prefixed keys
-							&& FALSE === ($line = $this->CI->lang->line($rule, FALSE))
+							&& FALSE === ($line = $this->lang->line($rule, FALSE))
 						) {
 							$line = 'Unable to access an error message corresponding to your field name.';
 						}
@@ -270,28 +268,28 @@ class MY_Form_validation extends CI_Form_validation
 		$param = '';
 		switch ($error_code) {
 			case UPLOAD_ERR_INI_SIZE:
-				$message = $this->CI->lang->line("form_validation_error_max_filesize_phpini");
+				$message = $this->lang->line("form_validation_error_max_filesize_phpini");
 				break;
 			case UPLOAD_ERR_FORM_SIZE:
-				$message = $this->CI->lang->line("form_validation_error_max_filesize_form");
+				$message = $this->lang->line("form_validation_error_max_filesize_form");
 				break;
 			case UPLOAD_ERR_PARTIAL:
-				$message = $this->CI->lang->line("form_validation_error_partial_upload");
+				$message = $this->lang->line("form_validation_error_partial_upload");
 				break;
 			case UPLOAD_ERR_NO_FILE:
-				$message = $this->CI->lang->line("form_validation_file");
+				$message = $this->lang->line("form_validation_file");
 				break;
 			case UPLOAD_ERR_NO_TMP_DIR:
-				$message = $this->CI->lang->line("form_validation_error_temp_dir");
+				$message = $this->lang->line("form_validation_error_temp_dir");
 				break;
 			case UPLOAD_ERR_CANT_WRITE:
-				$message = $this->CI->lang->line("form_validation_error_disk_write");
+				$message = $this->lang->line("form_validation_error_disk_write");
 				break;
 			case UPLOAD_ERR_EXTENSION:
-				$message = $this->CI->lang->line("form_validation_error_stopped");
+				$message = $this->lang->line("form_validation_error_stopped");
 				break;
 			default:
-				return $this->_build_error_msg($this->CI->lang->line("form_validation_error_unexpected"), $this->_translate_fieldname($field), $param) . $error_code;
+				return $this->_build_error_msg($this->lang->line("form_validation_error_unexpected"), $this->_translate_fieldname($field), $param) . $error_code;
 				break;
 		}
 		return $this->_build_error_msg($message, $this->_translate_fieldname($field), $param);
