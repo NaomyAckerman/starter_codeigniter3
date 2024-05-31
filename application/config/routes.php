@@ -54,3 +54,9 @@ $route['404_override'] = '';
 $route['translate_uri_dashes'] = FALSE;
 
 $route['media/(:any)'] = 'media/index/$1';
+
+$route['logout'] = 'auth/logout';
+$route['login'] = 'auth/login';
+$route['register'] = 'auth/register';
+$route['forgot'] = 'auth/forgot';
+$route['reset'] = 'auth/reset';

@@ -1,6 +1,6 @@
 <?php defined('BASEPATH') or exit('No direct script access allowed');
 
-class Alpha
+class MY_Alpha
 {
 	use CI_Instance;
 	public function __construct()
@@ -8,4 +8,4 @@ class Alpha
 	}
 }
 
-/* End of file Alpha.php */
+/* End of file MY_Alpha.php */

@@ -62,7 +62,7 @@
  * 
  */
 
-class Auth
+class MY_Auth
 {
 	use CI_Instance;
 
@@ -102,7 +102,8 @@ class Auth
 		$this->load->helper(['cookie', 'language', 'url']);
 
 		$this->_checkCompatibility();
-		$this->_recheckSessionAccess();
+		// $this->recheckSessionAccess();
+
 		// initialize identity
 		$this->identity = $this->config->item('identity', 'auth');
 		// initialize hash method options (Bcrypt)
@@ -1250,7 +1251,7 @@ class Auth
 		$user_id = $this->session->userdata('user_id');
 		$identity = $this->session->userdata('identity');
 		$session_hash = $this->session->userdata('auth_session_hash');
-		if (!$user_id && $identity && $session_hash && $session_hash === $this->config->item('session_hash', 'auth')) {
+		if ($user_id && $identity && $session_hash && $session_hash === $this->config->item('session_hash', 'auth')) {
 			$this->session->set_userdata([
 				'roles' => $this->getRoles($user_id),
 				'permissions' => $this->getPermissions($user_id),
@@ -1750,4 +1751,4 @@ class Auth
 	}
 }
 
-/* End of file Auth.php */
+/* End of file MY_Auth.php */
