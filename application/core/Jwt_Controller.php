@@ -11,6 +11,10 @@ require_once APPPATH . 'third_party/php-jwt/JWK.php';
 use Firebase\JWT\JWT;
 use Firebase\JWT\Key;
 
+/**
+ * * // Custom Library Type ------------------------------------------------------------------------
+ * If you want the cast type to be loaded globally, you can register it in the CI_Type trait
+ */
 class Jwt_Controller extends Rest_Controller
 {
 	protected $token_key;

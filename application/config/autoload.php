@@ -154,4 +154,4 @@ $autoload['model'] = [];
 |	$autoload['traits'] = array('trait1', 'trait2');
 |
 */
-$autoload['traits'] = ['ci_instance'];
+$autoload['traits'] = ['ci_instance', 'ci_type'];
