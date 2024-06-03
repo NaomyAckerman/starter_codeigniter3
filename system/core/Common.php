@@ -847,7 +847,21 @@ if ( ! function_exists('function_usable'))
 		return FALSE;
 	}
 
-	// ? Cutome Functions
+	// ? Custom Functions
+
+	if (!function_exists('is_json')) {		
+		/**
+		 * check whether it is a valid json value
+		 *
+		 * @param  string $value
+		 * @return bool
+		 */
+		function is_json(string $value)
+		{
+			json_decode($value);
+			return (json_last_error() == JSON_ERROR_NONE);
+		}
+	}
 
 	if (!function_exists('asset')) {
 		/**
@@ -896,6 +910,7 @@ if ( ! function_exists('function_usable'))
 			return htmlspecialchars_decode($string_html_escape);
 		}
 	}
+	
 	if (!function_exists('strtokebab')) {		
 		/**
 		 * strtokebab
@@ -909,6 +924,7 @@ if ( ! function_exists('function_usable'))
 			return url_title($value, '-', true);
 		}
 	}
+	
 	if (!function_exists('strtosnake')) {		
 		/**
 		 * strtosnake
@@ -922,6 +938,7 @@ if ( ! function_exists('function_usable'))
 			return url_title($value, '_', true);
 		}
 	}
+	
 	if (!function_exists('strtopascal')) {		
 		/**
 		 * strtopascal
@@ -936,6 +953,7 @@ if ( ! function_exists('function_usable'))
 			return str_replace(" ", "", ucwords($value));
 		}
 	}
+	
 	if (!function_exists('strtocamel')) {		
 		/**
 		 * strtocamel
@@ -948,6 +966,7 @@ if ( ! function_exists('function_usable'))
 			return lcfirst(strtopascal($value));
 		}
 	}
+	
 	if (!function_exists('array_except')) {		
 		/**
 		 * array_except
@@ -964,6 +983,7 @@ if ( ! function_exists('function_usable'))
 			return $array;
 		}
 	}
+
 	if (!function_exists('html_attributes')) {
 		/**
 		 * Generate html attribute string.

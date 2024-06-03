@@ -142,12 +142,11 @@ class Base_Model extends CI_Model
 			$where["$tableAs.$this->deleted_at_field"] = null;
 		}
 
-		return array_map(function ($data) {
-			$data = $this->_parseData($data);
-			return $data;
-		}, $this->db
-				->get_where($table, $where)
-				->result());
+		$result = $this->db
+			->get_where($table, $where)
+			->result();
+
+		return $this->_parseData($result);
 	}
 
 	public function getTrash(array $where = [], Closure $calback = null)
@@ -178,27 +177,56 @@ class Base_Model extends CI_Model
 		return $this->getAll($where, $calback);
 	}
 
-	private function _parseData($data = null)
+	// private function _parseData($data = null)
+	// {
+	// 	if (is_object($data) || is_array($data)) {
+	// 		foreach ($data as $key => $value) {
+	// 			$new_value = json_decode($value);
+	// 			if (!$new_value) {
+	// 				$new_value = $value;
+	// 				if (is_double($value)) {
+	// 					$new_value = filter_var($value, FILTER_VALIDATE_FLOAT);
+	// 				}
+	// 				if (is_integer($value) || in_array(strtolower($value), ['0'])) {
+	// 					$new_value = filter_var($value, FILTER_VALIDATE_INT);
+	// 				}
+	// 				if (in_array(strtolower($value), ['true', 'false'])) {
+	// 					$new_value = filter_var($value, FILTER_VALIDATE_BOOLEAN);
+	// 				}
+	// 			}
+	// 			if (is_array($data))
+	// 				$data[$key] = $new_value;
+	// 			elseif (is_object($data))
+	// 				$data->{$key} = $new_value;
+	// 		}
+	// 	}
+	// 	return $data;
+	// }
+
+	protected function _parseData($data = null)
 	{
-		if (is_object($data) || is_array($data)) {
-			foreach ($data as $key => $value) {
+		if (!is_array($data) && !is_object($data)) {
+			$new_data = json_decode($data);
+			if (!$new_data) {
+				return $data;
+			}
+			$data = is_array($new_data) || is_object($new_data) ? $new_data : $this->_parseData($new_data);
+		}
+		foreach ($data as $key => $value) {
+			if (is_array($value) || is_object($value)) {
+				$new_value = $this->_parseData($value);
+			} else {
 				$new_value = json_decode($value);
-				if (!$new_value) {
+				if ($new_value === null) {
 					$new_value = $value;
-					if (is_double($value)) {
-						$new_value = filter_var($value, FILTER_VALIDATE_FLOAT);
-					}
-					if (is_integer($value) || in_array(strtolower($value), ['0'])) {
-						$new_value = filter_var($value, FILTER_VALIDATE_INT);
-					}
-					if (in_array(strtolower($value), ['true', 'false'])) {
-						$new_value = filter_var($value, FILTER_VALIDATE_BOOLEAN);
-					}
+				} elseif (is_array($new_value) || is_object($new_value)) {
+					$new_value = $this->_parseData($value);
 				}
-				if (is_array($data))
-					$data[$key] = $new_value;
-				elseif (is_object($data))
-					$data->{$key} = $new_value;
+			}
+			if (is_array($data)) {
+				$data[$key] = $new_value;
+			} elseif (is_object($data)) {
+				$data->$key = $new_value;
 			}
 		}
 		return $data;

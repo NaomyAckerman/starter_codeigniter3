@@ -65,6 +65,7 @@
 class MY_Auth
 {
 	use CI_Instance;
+	use CI_Type;
 
 	/**
 	 * tables

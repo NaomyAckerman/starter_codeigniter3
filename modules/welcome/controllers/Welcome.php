@@ -9,6 +9,6 @@ class Welcome extends Base_Controller
 
 	public function index()
 	{
-		$this->display('welcome_message');
+		$this->display('welcome_v');
 	}
 }

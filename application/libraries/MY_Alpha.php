@@ -3,6 +3,8 @@
 class MY_Alpha
 {
 	use CI_Instance;
+	use CI_Type;
+
 	public function __construct()
 	{
 	}

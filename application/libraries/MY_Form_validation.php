@@ -15,6 +15,7 @@
 class MY_Form_validation extends CI_Form_validation
 {
 	use CI_Instance;
+	use CI_Type;
 
 	public function __construct()
 	{
