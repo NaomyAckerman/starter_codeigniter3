@@ -17,7 +17,8 @@
 	"require-dev": {
 		"mikey179/vfsstream": "1.6.*",
 		"phpunit/phpunit": "4.* || 5.* || 9.*",
-		"fakerphp/faker": "^1.9.1"
+		"fakerphp/faker": "^1.9.1",
+		"symfony/var-dumper": "^5.4"
 	},
 	"suggest": {
 		"paragonie/random_compat": "Provides better randomness in PHP 5.x"

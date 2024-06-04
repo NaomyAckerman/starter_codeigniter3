@@ -849,6 +849,20 @@ if ( ! function_exists('function_usable'))
 
 	// ? Custom Functions
 
+	if (!function_exists('if_null')) {		
+		/**
+		 * check if it is null use the default value
+		 *
+		 * @param  mixed $value
+		 * @param  mixed $default
+		 * @return mixed
+		 */
+		function if_null($value, $default = null)
+		{
+			return $value ?? $default;
+		}
+	}
+
 	if (!function_exists('is_json')) {		
 		/**
 		 * check whether it is a valid json value

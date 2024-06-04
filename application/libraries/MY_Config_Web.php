@@ -52,10 +52,10 @@ class MY_Config_Web
 	 * getItem
 	 *
 	 * @param  string $key
-	 * @param  string|null $default
+	 * @param  mixed $default
 	 * @return mixed
 	 */
-	public function getItem(string $key, string $default = null)
+	public function getItem(string $key, $default = null)
 	{
 		return $this->items[$key]['value'] ?? $default;
 	}
