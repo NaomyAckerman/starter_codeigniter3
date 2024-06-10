@@ -7,61 +7,6 @@
  * 
  */
 
-/**
- * 
- * TODO Auth Method
- * 
- * ? Auth
- * * login(string $identity, string $password, bool $remember) : Logs the user into the system.
- * * logout() : Logs the user out of the system.
- * * register(string $identity, string $password, ?array $additional_data) : Register (create) a new user.
- * * forgotten_password() => forgottenPassword(string $identity) : Resets a users password by emailing the user a reset code.
- * * forgotten_password_check() => forgottenPasswordCheck(string $code) : Check to see if the forgotten password code is valid.
- * * activate(int $user_id, ?string $code) : Validates and removes activation code. 
- * * deactivate(int $user_id) : Updates a users row with an activation code.
- * * logged_in() => check() : Check to see if a user is logged in.
- * * currentId() : The user's ID from the session user data or NULL if not found.
- * * user(?int $id) : Get a user. // ! ($id = current_user)
- * * users() : Get the users.
- * * usersWithPermissions(int|string|array $permission_id/$permission_name) : Get all users with certain permissions.
- * * usersWithRoles(int|string|array $role_id/$role_name) : Get all users with certain roles.
- * * update_user() => updateUser(int $id, array $data) : Update a user.
- * * delete_user() => deleteUser(int $id) : Delete a user.
- * ? Attempt
- * * is_max_login_attempts_exceeded() => hasAttemptsExceeded(string $identity, ?string $ip_address) : Check whether the maximum login attempts have been exceeded
- * * get_attempts_num() => getAttempts(string $identity, ?string $ip_address) : Get the number of login attempts
- * * increase_login_attempts() => increaseAttempts(string $identity) : Increase login attempts
- * * clear_login_attempts() => clearAttempts(string $identity, int $old_attempts_expire_period, ?string $ip_address) : Clear loggin attempts
- * ? Role
- * * group() => role(int $id) : Get a roles.
- * * groups() => roles() : Get the roles.
- * * create_group() => createRole(string $name, ?array $additional_data) : Create new role
- * * update_group() => updateRole(int $id, ?array $data) : Update role
- * * delete_group() => deleteRole(int $id) : Delete role
- * * add_to_group() => assignRole(int|string|array $key, int $user_id) : Add user to role,
- * * remove_from_group() => removeRole(int|string|array $key, int $user_id) : Remove role from user,
- * * get_users_groups() => getRoles(?int $user_id) : Get user role, // ! ($user_id = current_user)
- * * in_group() => hasRole(int|string $id/$name, ?int $user_id) : Check if the user has the role, // ! ($user_id = current_user)
- * ? Permission
- * * permission(int $id) : Get a permissions.
- * * permissions() : Get the permissions.
- * * createPermission(string $name, ?array $additional_data) : Create new permission
- * * updatePermission(int $id, ?array $data) : Update permission
- * * deletePermission(int $id) : Delete permission
- * * assignPermission(int|array $id, int $role_id) : Add role to permission,
- * * removePermission(int|array $id, int $role_id) : Remove permission from role,
- * * getPermissions(?int $user_id) : Get user permission, // ! ($user_id = current_user)
- * * hasPermission(int|string $id/$name, ?int $user_id) : Check if the user has the permission, // ! ($user_id = current_user)
- * ? Util
- * * messages() : Get messages.
- * * messages_array() => messagesArray() : Get messages as an array.
- * * errors() : Get errors.
- * * errors_array() => errorsArray() : Get errors as an array.
- * * hash_password() => hashPassword(string $password) : Hashes the password to be stored in the database.
- * * verify_password() => verifyPassword(string $password, string $hashPassword_db) : This function takes a password and validates it.
- * 
- */
-
 class MY_Auth
 {
 	use CI_Instance;
@@ -100,10 +45,9 @@ class MY_Auth
 		$this->config->load('auth', true);
 		$this->lang->load('auth');
 		$this->load->library(['email', 'session']);
-		$this->load->helper(['cookie', 'language', 'url']);
+		$this->load->helper(['cookie', 'language', 'url', 'auth']);
 
 		$this->_checkCompatibility();
-		// $this->recheckSessionAccess();
 
 		// initialize identity
 		$this->identity = $this->config->item('identity', 'auth');
@@ -115,6 +59,7 @@ class MY_Auth
 
 	// ? Auth ------------------------------------------------------------------------
 
+	// * DONE
 	/**
 	 * Logs the user into the system.
 	 * @method login()
@@ -129,11 +74,11 @@ class MY_Auth
 		if ($identity && $password) {
 			$query = $this->db
 				->get_where($this->tables['users'], [$this->identity => $identity]);
-			if ($this->hasAttemptsExceeded($identity)) {
-				$this->_setError('login_timeout');
-				return false;
-			}
 			if ($query->num_rows() === 1) {
+				if ($this->hasAttemptsExceeded($identity)) {
+					$this->_setError('login_timeout');
+					return false;
+				}
 				$user = $query->row();
 				if ($this->verifyPassword($password, $user->password)) {
 					if ($user->is_active == 0) {
@@ -165,6 +110,7 @@ class MY_Auth
 		return false;
 	}
 
+	// * DONE
 	/**
 	 * Logs the user out of the system.
 	 * @method logout()
@@ -172,7 +118,7 @@ class MY_Auth
 	 */
 	public function logout()
 	{
-		$this->session->unset_userdata([$this->identity, 'id', 'user_id', 'roles', 'permissions']);
+		$this->session->unset_userdata(['identity', 'user_id', 'auth_session_hash', 'roles', 'permissions']);
 		// delete the remember me cookies if they exist
 		delete_cookie($this->config->item('remember_cookie_name', 'auth'));
 		// Clear all codes
@@ -184,16 +130,20 @@ class MY_Auth
 		return true;
 	}
 
+	// * DONE
 	/**
 	 * Register (create) a new user.
+	 * note:
+	 * - $roles can be the id or name of the role.
 	 * @method register() 
 	 * 
 	 * @param  string $identity
 	 * @param  string $password
 	 * @param  array $additional_data
+	 * @param  int|string|array|null $roles
 	 * @return array => key ['status', 'data', 'code', 'id']
 	 */
-	public function register(string $identity, string $password, array $additional_data = [])
+	public function register(string $identity, string $password, array $additional_data = [], $roles = null)
 	{
 		$result = ['status' => false, 'data' => null, 'code' => null, 'id' => null];
 		$email_activation = $this->config->item('email_activation', 'auth');
@@ -208,35 +158,38 @@ class MY_Auth
 			$this->_setError('account_creation_unsuccessful');
 			return $result;
 		}
-		$data = array_merge($additional_data, [
+		$data = $this->_filterData($this->tables['users'], array_merge($additional_data, [
 			$this->identity => $identity,
 			'password' => $password,
 			'is_active' => ($manual_activation ? 0 : 1),
-		]);
-		$this->db->insert($this->tables['users'], $data);
+		]));
+		$result_insert = $this->db->insert($this->tables['users'], $data);
 		$user_id = $this->db->insert_id();
+		if (!$user_id && !$result_insert) {
+			$this->_setError('account_creation_unsuccessful');
+			return $result;
+		}
 		if (!$email_activation) {
-			if ($user_id) {
-				$result['status'] = true;
-				$result['data'] = $data;
-				$result['id'] = $user_id;
-				$this->_setMessage('account_creation_successful');
-			} else {
-				$this->_setError('account_creation_unsuccessful');
-			}
+			$result['status'] = true;
+			$result['data'] = $data;
+			$result['id'] = $user_id;
+			$this->_setMessage('account_creation_successful');
 			return $result;
 		} else {
-			if (!$user_id) {
-				$this->_setError('account_creation_unsuccessful');
-				return $result;
-			}
 			// deactivate so the user must follow the activation flow
 			['status' => $deactivate_status, 'code' => $activation_code] = $this->deactivate($user_id);
 			// the deactivate method call adds a message, here we need to clear that
 			$this->_clearMessages();
 			if (!$deactivate_status) {
-				$this->_setError('deactivate_unsuccessful');
+				// the deactivate set error
 				return $result;
+			}
+			$result['status'] = true;
+			$result['data'] = $data;
+			$result['id'] = $user_id;
+			$result['code'] = $activation_code;
+			if ($roles) {
+				$this->assignRole($roles, $user_id);
 			}
 			if ($email) {
 				$email_activation_path = $this->config->item('email_templates', 'auth') . $this->config->item('email_activation_view', 'auth');
@@ -253,25 +206,18 @@ class MY_Auth
 				$this->email->subject($this->config->item('title_email', 'auth') . ' - ' . $this->lang->line('email_activation_subject'));
 				$this->email->message($message);
 				if ($this->email->send() === true) {
-					$result['status'] = true;
-					$result['data'] = $data;
-					$result['id'] = $user_id;
-					$result['code'] = $activation_code;
 					$this->_setMessage('activation_email_successful');
-					return $result;
+				} else {
+					$this->_setMessage('activation_email_unsuccessful');
 				}
-				$this->_setError('activation_email_unsuccessful');
-				return $result;
+			} else {
+				$this->_setMessage('account_creation_successful');
 			}
-			$result['status'] = true;
-			$result['data'] = $data;
-			$result['id'] = $user_id;
-			$result['code'] = $activation_code;
-			$this->_setMessage('activation_email_successful');
 			return $result;
 		}
 	}
 
+	// * DONE
 	/**
 	 * Resets a users password by emailing the user a reset code.
 	 * @method forgottenPassword()
@@ -302,6 +248,9 @@ class MY_Auth
 					$forgotten_password_code = $token->user_code;
 				}
 				if ($forgotten_password_code) {
+					$result['status'] = true;
+					$result['code'] = $forgotten_password_code;
+					$result['data'] = $user;
 					if ($user->email) {
 						$email_forgot_password_path = $this->config->item('email_templates', 'auth') . $this->config->item('email_forgot_password_view', 'auth');
 						$data_email = [
@@ -314,22 +263,17 @@ class MY_Auth
 						$this->email->clear();
 						$this->email->from($this->config->item('admin_email', 'auth'), $this->config->item('title_email', 'auth'));
 						$this->email->to($user->email);
-						$this->email->subject($this->config->item('title_email', 'auth') . ' - ' . $this->lang->line('email_forgottenPassword_subject'));
+						$this->email->subject($this->config->item('title_email', 'auth') . ' - ' . $this->lang->line('email_forgotten_password_subject'));
 						$this->email->message($message);
 						if ($this->email->send()) {
-							$result['status'] = true;
-							$result['code'] = $forgotten_password_code;
-							$result['data'] = $user;
-							$this->_setMessage('forgot_password_successful');
-							return $result;
+							$this->_setMessage('forgot_password_email_successful');
+						} else {
+							$this->_setMessage('forgot_password_email_unsuccessful');
 						}
 					} else {
-						$result['status'] = true;
-						$result['code'] = $forgotten_password_code;
-						$result['data'] = $user;
 						$this->_setMessage('forgot_password_successful');
-						return $result;
 					}
+					return $result;
 				}
 			}
 		}
@@ -337,6 +281,7 @@ class MY_Auth
 		return $result;
 	}
 
+	// * DONE
 	/**
 	 * Check to see if the forgotten password code is valid.
 	 * @method forgottenPasswordCheck
@@ -363,7 +308,7 @@ class MY_Auth
 			}
 		}
 		if (!$user) {
-			$this->_setError('password_change_unsuccessful');
+			$this->_setError('forgot_password_invalid');
 			return $result;
 		} else {
 			if ($this->config->item('forgot_password_expiration', 'auth') > 0) {
@@ -373,7 +318,7 @@ class MY_Auth
 					//it has expired
 					$identity = $user->{$this->identity};
 					$this->_clearForgottenPasswordCode($identity);
-					$this->_setError('password_change_unsuccessful');
+					$this->_setError('forgot_password_expired');
 					return $result;
 				}
 			}
@@ -383,6 +328,38 @@ class MY_Auth
 		}
 	}
 
+	// * DONE
+	/**
+	 * Reset password
+	 * @method resetPassword()
+	 *
+	 * @param  string $identity
+	 * @param  string $new_password
+	 * @return bool
+	 */
+	public function resetPassword(string $identity, string $new_password)
+	{
+		$hash = $this->hashPassword($new_password);
+		if (!$this->_identityCheck($identity) || !$hash) {
+			$this->_setError('password_change_unsuccessful');
+			return FALSE;
+		}
+		$data = [
+			'password' => $hash,
+			'remember_code' => NULL,
+			'forgotten_password_code' => NULL,
+			'forgotten_password_time' => NULL
+		];
+		$result_update = $this->db->update($this->tables['users'], $data, [$this->identity => $identity]);
+		if ($result_update) {
+			$this->set_message('password_change_successful');
+		} else {
+			$this->set_error('password_change_unsuccessful');
+		}
+		return $result_update;
+	}
+
+	// * DONE
 	/**
 	 * Validates and removes activation code.
 	 * @method activate()
@@ -410,7 +387,7 @@ class MY_Auth
 		}
 		// Activate if no code is given
 		// Or if a user was found with this code, and that it matches the id
-		if (!$code || ($user && ($user->id ?? null) === $user_id)) {
+		if (!$code || ($user && (($user->id ?? null) == $user_id))) {
 			$data = [
 				'activation_selector' => NULL,
 				'activation_code' => NULL,
@@ -426,6 +403,7 @@ class MY_Auth
 		return false;
 	}
 
+	// * DONE
 	/**
 	 * Updates a users row with an activation code.
 	 * @method deactivate()
@@ -461,6 +439,7 @@ class MY_Auth
 		return $result;
 	}
 
+	// * DONE
 	/**
 	 * Check to see if a user is logged in.
 	 * @method check()
@@ -471,12 +450,13 @@ class MY_Auth
 	{
 		$recheck = $this->_recheckSession();
 		// auto-login the user if they are remembered
-		if (!$recheck && ($this->config->item('rememberUsers', 'auth')) && get_cookie($this->config->item('remember_cookie_name', 'auth'))) {
+		if (!$recheck && ($this->config->item('remember_users', 'auth')) && get_cookie($this->config->item('remember_cookie_name', 'auth'))) {
 			$recheck = $this->_loginRememberedUser();
 		}
 		return $recheck;
 	}
 
+	// * DONE
 	/**
 	 * The user's ID from the session user data or NULL if not found.
 	 * @method currentId()
@@ -488,6 +468,7 @@ class MY_Auth
 		return $this->session->userdata('user_id');
 	}
 
+	// * DONE
 	/**
 	 * Get a user.
 	 * note:
@@ -506,6 +487,7 @@ class MY_Auth
 		])->row();
 	}
 
+	// * DONE
 	/**
 	 * Get the users.
 	 * @method users()
@@ -517,6 +499,7 @@ class MY_Auth
 		return $this->db->get($this->tables['users'])->result();
 	}
 
+	// * DONE
 	/**
 	 * Get all users with certain permissions.
 	 * @method usersWithPermissions()
@@ -541,6 +524,7 @@ class MY_Auth
 			->get("{$this->tables['users']} as u")->result();
 	}
 
+	// * DONE
 	/**
 	 * Get all users with certain roles.
 	 * @method usersWithRoles()
@@ -563,6 +547,7 @@ class MY_Auth
 			->get("{$this->tables['users']} as u")->result();
 	}
 
+	// * DONE
 	/**
 	 * Update a user.
 	 * @method updateUser()
@@ -573,9 +558,16 @@ class MY_Auth
 	 */
 	public function updateUser(int $id, array $data)
 	{
-		return $this->db->update($this->tables['users'], $data, ['id' => $id]);
+		$result = $this->db->update($this->tables['users'], $this->_filterData($this->tables['users'], $data), ['id' => $id]);
+		if ($result) {
+			$this->_setMessage('update_user_successful');
+		} else {
+			$this->_setError('update_user_unsuccessful');
+		}
+		return $result;
 	}
 
+	// * DONE
 	/**
 	 * Delete a user.
 	 * @method deleteUser()
@@ -585,11 +577,18 @@ class MY_Auth
 	 */
 	public function deleteUser(int $id)
 	{
-		return $this->db->delete($this->tables['users'], ['id' => $id]);
+		$result = $this->db->delete($this->tables['users'], ['id' => $id]);
+		if ($result) {
+			$this->_setMessage('delete_user_successful');
+		} else {
+			$this->_setError('delete_user_unsuccessful');
+		}
+		return $result;
 	}
 
 	// ? Attempt ------------------------------------------------------------------------
 
+	// * DONE
 	/**
 	 * Check whether the maximum login attempts have been exceeded.
 	 * @method hasAttemptsExceeded()
@@ -611,6 +610,7 @@ class MY_Auth
 		return false;
 	}
 
+	// * DONE
 	/**
 	 * Get the number of login attempts.
 	 * @method getAttempts()
@@ -634,8 +634,10 @@ class MY_Auth
 		return 0;
 	}
 
+	// * DONE
 	/**
 	 * Get the last time a login attempt occurred from given identity
+	 * @method getLastAttempt()
 	 *
 	 * @param  	string $identity
 	 * @param 	string|null $ip_address IP address
@@ -659,6 +661,7 @@ class MY_Auth
 		return null;
 	}
 
+	// * DONE
 	/**
 	 * Increase login attempts.
 	 * @method increaseAttempts()
@@ -678,6 +681,7 @@ class MY_Auth
 		return false;
 	}
 
+	// * DONE
 	/**
 	 * Clear loggin attempts
 	 * @method clearAttempts()
@@ -710,6 +714,7 @@ class MY_Auth
 
 	// ? Role ------------------------------------------------------------------------
 
+	// * DONE
 	/**
 	 * Get a roles.
 	 * @method role()
@@ -722,6 +727,7 @@ class MY_Auth
 		return $this->db->get_where($this->tables['roles'], ['id' => $id])->row();
 	}
 
+	// * DONE
 	/**
 	 * Get the roles.
 	 * @method roles()
@@ -733,6 +739,7 @@ class MY_Auth
 		return $this->db->get($this->tables['roles'])->result();
 	}
 
+	// * DONE
 	/**
 	 * Create new role.
 	 * @method createRole()
@@ -751,10 +758,14 @@ class MY_Auth
 		if ($result_insert) {
 			$result['id'] = $this->db->insert_id();
 			$result['status'] = true;
+			$this->_setMessage('create_role_successful');
+		} else {
+			$this->_setError('create_role_unsuccessful');
 		}
 		return $result;
 	}
 
+	// * DONE
 	/**
 	 * Update role.
 	 * @method updateRole()
@@ -765,10 +776,17 @@ class MY_Auth
 	 */
 	public function updateRole(int $id, array $data = [])
 	{
-		$data = $this->_filterData($data);
-		return $this->db->update($this->tables['roles'], $data, ['id' => $id]);
+		$data = $this->_filterData($this->tables['roles'], $data);
+		$result = $this->db->update($this->tables['roles'], $data, ['id' => $id]);
+		if ($result) {
+			$this->_setMessage('update_role_successful');
+		} else {
+			$this->_setError('update_role_unsuccessful');
+		}
+		return $result;
 	}
 
+	// * DONE
 	/**
 	 * Delete role.
 	 * @method deleteRole()
@@ -778,9 +796,16 @@ class MY_Auth
 	 */
 	public function deleteRole(int $id)
 	{
-		return $this->db->delete($this->tables['roles'], ['id' => $id]);
+		$result = $this->db->delete($this->tables['roles'], ['id' => $id]);
+		if ($result) {
+			$this->_setMessage('delete_role_successful');
+		} else {
+			$this->_setError('delete_role_unsuccessful');
+		}
+		return $result;
 	}
 
+	// * DONE
 	/**
 	 * Add user to role.
 	 * note:
@@ -803,6 +828,7 @@ class MY_Auth
 			->or_where_in('name', $key)
 			->get($this->tables['roles'])->result();
 		if (!$user || !$roles) {
+			$this->_setError('assign_role_unsuccessful');
 			return false;
 		}
 		$effected = 0;
@@ -821,9 +847,11 @@ class MY_Auth
 				}
 			}
 		}
+		$this->_setMessage('assign_role_successful');
 		return $effected > 0;
 	}
 
+	// * DONE
 	/**
 	 * Remove role from user.
 	 * note:
@@ -846,6 +874,7 @@ class MY_Auth
 			->or_where_in('name', $key)
 			->get($this->tables['roles'])->result();
 		if (!$user || !$roles) {
+			$this->_setError('remove_role_unsuccessful');
 			return false;
 		}
 		foreach ($roles as $role) {
@@ -854,9 +883,11 @@ class MY_Auth
 				['user_id' => $user_id, 'role_id' => $role->id]
 			);
 		}
+		$this->_setMessage('remove_role_successful');
 		return true;
 	}
 
+	// * DONE
 	/**
 	 * Get user role.
 	 * note:
@@ -879,6 +910,7 @@ class MY_Auth
 		return $this->session->userdata('roles') ?? [];
 	}
 
+	// * DONE
 	/**
 	 * Check if the user has the role.
 	 * note:
@@ -917,6 +949,7 @@ class MY_Auth
 
 	// ? Permission ------------------------------------------------------------------------
 
+	// * DONE
 	/**
 	 * Get a permissions.
 	 * @method permission()
@@ -929,6 +962,7 @@ class MY_Auth
 		return $this->db->get_where($this->tables['permissions'], ['id' => $id])->row();
 	}
 
+	// * DONE
 	/**
 	 * Get the permissions.
 	 * @method permissions()
@@ -940,6 +974,7 @@ class MY_Auth
 		return $this->db->get($this->tables['permissions'])->result();
 	}
 
+	// * DONE
 	/**
 	 * Create new permission.
 	 * @method createPermission()
@@ -958,10 +993,14 @@ class MY_Auth
 		if ($result_insert) {
 			$result['id'] = $this->db->insert_id();
 			$result['status'] = true;
+			$this->_setMessage('create_permission_successful');
+		} else {
+			$this->_setError('create_permission_unsuccessful');
 		}
 		return $result;
 	}
 
+	// * DONE
 	/**
 	 * Update permission.
 	 * @method updatePermission()
@@ -972,10 +1011,17 @@ class MY_Auth
 	 */
 	public function updatePermission(int $id, array $data = [])
 	{
-		$data = $this->_filterData($data);
-		return $this->db->update($this->tables['permissions'], $data, ['id' => $id]);
+		$data = $this->_filterData($this->tables['permissions'], $data);
+		$result = $this->db->update($this->tables['permissions'], $data, ['id' => $id]);
+		if ($result) {
+			$this->_setMessage('update_permission_successful');
+		} else {
+			$this->_setError('update_permission_unsuccessful');
+		}
+		return $result;
 	}
 
+	// * DONE
 	/**
 	 * Delete permission.
 	 * @method deleteRole()
@@ -985,9 +1031,16 @@ class MY_Auth
 	 */
 	public function deletePermission(int $id)
 	{
-		return $this->db->delete($this->tables['permissions'], ['id' => $id]);
+		$result = $this->db->delete($this->tables['permissions'], ['id' => $id]);
+		if ($result) {
+			$this->_setMessage('delete_permission_successful');
+		} else {
+			$this->_setError('delete_permission_unsuccessful');
+		}
+		return $result;
 	}
 
+	// * DONE
 	/**
 	 * Add role to permission.
 	 * note:
@@ -1010,6 +1063,7 @@ class MY_Auth
 			->or_where_in('name', $key)
 			->get($this->tables['permissions'])->result();
 		if (!$role || !$permissions) {
+			$this->_setError('assign_permission_unsuccessful');
 			return false;
 		}
 		$effected = 0;
@@ -1028,9 +1082,11 @@ class MY_Auth
 				}
 			}
 		}
+		$this->_setMessage('assign_permission_successful');
 		return $effected > 0;
 	}
 
+	// * DONE
 	/**
 	 * Remove permission from role.
 	 * note:
@@ -1053,6 +1109,7 @@ class MY_Auth
 			->or_where_in('name', $key)
 			->get($this->tables['permissions'])->result();
 		if (!$role || !$permissions) {
+			$this->_setError('remove_permission_unsuccessful');
 			return false;
 		}
 		foreach ($permissions as $permission) {
@@ -1061,9 +1118,11 @@ class MY_Auth
 				['role_id' => $role_id, 'permission_id' => $permission->id]
 			);
 		}
+		$this->_setMessage('remove_permission_successful');
 		return true;
 	}
 
+	// * DONE
 	/**
 	 * Get user permission.
 	 * note:
@@ -1088,6 +1147,7 @@ class MY_Auth
 		return $this->session->userdata('permissions') ?? [];
 	}
 
+	// * DONE
 	/**
 	 * Check if the user has the permission.
 	 * note:
@@ -1126,6 +1186,7 @@ class MY_Auth
 
 	// ? Util ------------------------------------------------------------------------
 
+	// * DONE
 	/**
 	 * Get messages.
 	 * @method messages()
@@ -1142,6 +1203,7 @@ class MY_Auth
 		return $_output;
 	}
 
+	// * DONE
 	/**
 	 * Get messages as an array.
 	 * @method messagesArray()
@@ -1174,6 +1236,7 @@ class MY_Auth
 		return $_output;
 	}
 
+	// * DONE
 	/**
 	 * Get errors as an array.
 	 * @method errorsArray()
@@ -1190,6 +1253,7 @@ class MY_Auth
 		return $_output;
 	}
 
+	// * DONE
 	/**
 	 * Hashes the password to be stored in the database.
 	 * @method hashPassword()
@@ -1218,27 +1282,28 @@ class MY_Auth
 		return null;
 	}
 
+	// * DONE
 	/**
 	 * This function takes a password and validates it.
 	 * @method verifyPassword()
 	 *
 	 * @param  string $password
-	 * @param  string $hashPassword_db
+	 * @param  string $hash_password_db
 	 * @return bool
 	 */
-	public function verifyPassword(string $password, string $hashPassword_db)
+	public function verifyPassword(string $password, string $hash_password_db)
 	{
 		// Check for empty id or password, or password containing null char, or password above limit
 		// Null char may pose issue: http://php.net/manual/en/function.password-hash.php#118603
 		// Long password may pose DOS issue (note: strlen gives size in bytes and not in multibyte symbol)
 		if (
-			empty($password) || empty($hashPassword_db) || strpos($password, "\0") !== FALSE
+			empty($password) || empty($hash_password_db) || strpos($password, "\0") !== FALSE
 			|| strlen($password) > self::MAX_PASSWORD_SIZE_BYTES
 		) {
 			return FALSE;
 		}
 
-		return password_verify($password, $hashPassword_db);
+		return password_verify($password, $hash_password_db);
 	}
 
 	/**
@@ -1264,6 +1329,7 @@ class MY_Auth
 
 	// ? Private ------------------------------------------------------------------------
 
+	// * DONE
 	/**
 	 * Check the compatibility with the server
 	 * @method _checkCompatibility()
@@ -1293,6 +1359,7 @@ class MY_Auth
 		}
 	}
 
+	// * DONE
 	/**
 	 * Set a message
 	 * @method _setMessage()
@@ -1306,6 +1373,7 @@ class MY_Auth
 		return $message;
 	}
 
+	// * DONE
 	/**
 	 * Clear messages
 	 * @method _clearMessages()
@@ -1318,6 +1386,7 @@ class MY_Auth
 		return TRUE;
 	}
 
+	// * DONE
 	/**
 	 * Set an error message
 	 * @method _setError()
@@ -1331,6 +1400,7 @@ class MY_Auth
 		return $error;
 	}
 
+	// * DONE
 	/**
 	 * Clear Errors
 	 * @method _clearErrors()
@@ -1343,6 +1413,7 @@ class MY_Auth
 		return TRUE;
 	}
 
+	// * DONE
 	/**
 	 * Filter exist field
 	 * @method _filterData()
@@ -1366,6 +1437,7 @@ class MY_Auth
 		return $filtered_data;
 	}
 
+	// * DONE
 	/**
 	 * Retrieve hash algorithm according to options
 	 * @method _getHashAlgo()
@@ -1390,6 +1462,7 @@ class MY_Auth
 		return $algo;
 	}
 
+	// * DONE
 	/**
 	 * Retrieve hash parameter according to options
 	 * @method _getHashParameters()
@@ -1414,6 +1487,7 @@ class MY_Auth
 		return $params;
 	}
 
+	// * DONE
 	/**
 	 * Generate a random token
 	 * @method _randomToken()
@@ -1446,6 +1520,7 @@ class MY_Auth
 		return null;
 	}
 
+	// * DONE
 	/**
 	 * Generate a random selector/validator couple
 	 * @method _generateSelectorValidatorCouple()
@@ -1476,6 +1551,7 @@ class MY_Auth
 		];
 	}
 
+	// * DONE
 	/**
 	 * Retrieve remember cookie info
 	 * @method _retrieveSelectorValidatorCouple()
@@ -1503,6 +1579,7 @@ class MY_Auth
 		return $result;
 	}
 
+	// * DONE
 	/**
 	 * Check if password needs to be rehashed
 	 * @method _reverifyPasswordIfNeeded()
@@ -1535,6 +1612,7 @@ class MY_Auth
 		return false;
 	}
 
+	// * DONE
 	/**
 	 * Identity check
 	 * @method _identityCheck()
@@ -1549,6 +1627,7 @@ class MY_Auth
 		])->num_rows() > 0;
 	}
 
+	// * DONE
 	/**
 	 * Set user session
 	 * @method _setSession()
@@ -1565,13 +1644,14 @@ class MY_Auth
 			'last_login' => $user->last_login,
 			'last_check' => date('Y-m-d H:i:s'),
 			'auth_session_hash' => $this->config->item('session_hash', 'auth'),
-			$this->identity => $user->{$this->identity},
+			// $this->identity => $user->{$this->identity},
 			'roles' => $this->getRoles($user->id),
 			'permissions' => $this->getPermissions($user->id)
 		];
 		$this->session->set_userdata($session_data);
 	}
 
+	// * DONE
 	/**
 	 * Update last login
 	 * @method _updateLastLogin()
@@ -1586,6 +1666,7 @@ class MY_Auth
 		], ['id' => $id]);
 	}
 
+	// * DONE
 	/**
 	 * Clear the forgotten password code for a user
 	 * @method _clearForgottenPasswordCode()
@@ -1606,6 +1687,7 @@ class MY_Auth
 		return false;
 	}
 
+	// * DONE
 	/**
 	 * Clear the remember code for a user
 	 * @method _clearRememberCode()
@@ -1629,6 +1711,7 @@ class MY_Auth
 		return false;
 	}
 
+	// * DONE
 	/**
 	 * Verifies if the session should be rechecked according to the configuration item recheck_timer. If it does, then
 	 * it will check if the user is still active
@@ -1666,6 +1749,7 @@ class MY_Auth
 		return (bool) $session_hash && $session_hash === $this->config->item('session_hash', 'auth');
 	}
 
+	// * DONE
 	/**
 	 * Set a user to be remembered
 	 * @method _setRememberUser()
@@ -1706,6 +1790,7 @@ class MY_Auth
 		return false;
 	}
 
+	// * DONE
 	/**
 	 * Login automatically a user with the "Remember me" feature
 	 * Implemented as described in
@@ -1733,7 +1818,7 @@ class MY_Auth
 			// Retrieve the information
 			$user = $query->row();
 			// Check the code against the validator
-			$identity = $user->{$this->identity_column};
+			$identity = $user->{$this->identity};
 			if ($this->verifyPassword($token->validator, $user->remember_code)) {
 				$this->_updateLastLogin($user->id);
 				$this->_setSession($user);

@@ -119,6 +119,23 @@ class MY_Config_Web
 	}
 
 	/**
+	 * changeStatus
+	 *
+	 * @param  string $key
+	 * @param  bool $status
+	 * @return bool
+	 */
+	public function changeStatus(string $key, bool $status)
+	{
+		$result = $this->db->update($this->table, ['is_active' => $status], ['key' => $key]);
+		if ($result) {
+			$this->items[$key]['is_active'] = $status;
+			$this->cache->file->save($this->cache_key, $this->items, null);
+		}
+		return $result;
+	}
+
+	/**
 	 * revalidate
 	 *
 	 * @return void

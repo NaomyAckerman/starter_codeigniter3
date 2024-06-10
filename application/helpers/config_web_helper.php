@@ -71,6 +71,21 @@ if (!function_exists('config_web_clean')) {
 	}
 }
 
+if (!function_exists('config_web_change_status')) {
+	/**
+	 * config_web_change_status
+	 *
+	 * @param  string $key
+	 * @param  bool $status
+	 * @return bool
+	 */
+	function config_web_change_status(string $key, bool $status)
+	{
+		$CI = &get_instance();
+		return $CI->config_web->changeStatus($key, $status);
+	}
+}
+
 if (!function_exists('config_web_revalidate')) {
 	/**
 	 * config_web_revalidate

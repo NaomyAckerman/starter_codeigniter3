@@ -3,11 +3,11 @@ defined('BASEPATH') or exit('No direct script access allowed');
 
 class Base_Model extends CI_Model
 {
-	public $table;
-	public $alias;
-	public $key = 'id';
-	public $sort = 'DESC';
-	public $order_by;
+	protected $table;
+	protected $alias;
+	protected $key = 'id';
+	protected $sort = 'DESC';
+	protected $order_by;
 	protected $created_at_field = 'created_at';
 	protected $updated_at_field = 'updated_at';
 	protected $deleted_at_field = 'deleted_at';
