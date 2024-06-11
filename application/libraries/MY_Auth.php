@@ -229,7 +229,7 @@ class MY_Auth
 	{
 		$result = ['status' => false, 'data' => null, 'code' => null];
 		// Retrieve user information
-		$user = $this->get_where($this->tables['users'], [
+		$user = $this->db->get_where($this->tables['users'], [
 			$this->identity => $identity,
 			'is_active' => 1
 		])->row();
@@ -352,9 +352,9 @@ class MY_Auth
 		];
 		$result_update = $this->db->update($this->tables['users'], $data, [$this->identity => $identity]);
 		if ($result_update) {
-			$this->set_message('password_change_successful');
+			$this->_setMessage('password_change_successful');
 		} else {
-			$this->set_error('password_change_unsuccessful');
+			$this->_setError('password_change_unsuccessful');
 		}
 		return $result_update;
 	}
