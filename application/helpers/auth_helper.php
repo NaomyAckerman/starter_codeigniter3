@@ -44,7 +44,7 @@ if (!function_exists('auth_register')) {
 	function auth_register(string $identity, string $password, array $additional_data = [], $roles = null)
 	{
 		$CI = &get_instance();
-		return $CI->auth->register($identity, $password, $additional_data);
+		return $CI->auth->register($identity, $password, $additional_data, $roles);
 	}
 }
 

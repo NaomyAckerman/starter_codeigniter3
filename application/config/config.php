@@ -408,7 +408,7 @@ $config['sess_save_path'] = null;
 // $config['sess_save_path'] = STORAGEPATH . 'framework/sessions/';
 // $config['sess_save_path'] = sys_get_temp_dir(); // on production server
 $config['sess_match_ip'] = FALSE;
-$config['sess_time_to_update'] = 300;
+$config['sess_time_to_update'] = $config['sess_expiration'] / 2;
 $config['sess_regenerate_destroy'] = FALSE;
 
 /*

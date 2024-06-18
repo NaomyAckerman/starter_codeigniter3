@@ -1,11 +1,14 @@
 .env
 .env.*
 .DS_Store
+.vscode
 
 assets/storage
 assets/*
 !assets/favicon.ico
 !assets/index.html
+!assets/js
+!assets/css
 
 storage/cronjobs/*
 !storage/cronjobs/index.html
