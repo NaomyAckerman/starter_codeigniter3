@@ -57,7 +57,7 @@ class MY_Auth
 		$this->tables = $this->config->item('tables', 'auth');
 	}
 
-	// ? Auth ------------------------------------------------------------------------
+	// ! Start Auth ------------------------------------------------------------------------
 
 	// * DONE
 	/**
@@ -712,14 +712,29 @@ class MY_Auth
 		return FALSE;
 	}
 
-	// ? Role ------------------------------------------------------------------------
+	// ! Start Role ------------------------------------------------------------------------
 
 	// * DONE
 	/**
-	 * Get a roles.
+	 * Role builder.
+	 * @method roleBuilder
+	 *
+	 * @param  string|null $as Alias table of role
+	 * @return CI_DB_query_builder
+	 */
+	public function roleBuilder(string $as = null): CI_DB_query_builder
+	{
+		$table = $as ? ($this->tables['roles'] . " as " . $as) : $this->tables['roles'];
+		$this->db->from($table);
+		return $this->db;
+	}
+
+	// * DONE
+	/**
+	 * Get role by id.
 	 * @method role()
 	 *
-	 * @param  int $id
+	 * @param  int $id ID of role
 	 * @return object|null
 	 */
 	public function role(int $id)
@@ -729,14 +744,55 @@ class MY_Auth
 
 	// * DONE
 	/**
-	 * Get the roles.
+	 * Get all roles.
 	 * @method roles()
-	 *
+	 * 
 	 * @return array
 	 */
-	public function roles()
+	public function roles(): array
 	{
 		return $this->db->get($this->tables['roles'])->result();
+	}
+
+	// * DONE
+	/**
+	 * Get all roles with a specific user.
+	 * @method getRolesWithUser()
+	 *
+	 * @param  int $user_id ID or user
+	 * @return array
+	 */
+	public function getRolesWithUser(int $user_id): array
+	{
+		return $this->db
+			->select('r.*')
+			->join("{$this->tables['user_roles']} as ur", 'r.id = ur.role_id')
+			->where(['ur.user_id' => $user_id])
+			->group_by('ur.role_id')
+			->get("{$this->tables['roles']} as r")->result();
+	}
+
+	// * DONE
+	/**
+	 * Get all roles with specific permissions.
+	 * @method getRolesWithPermission()
+	 *
+	 * @param  int|string|array $permission ID or name of permission, format of name (resource.action)
+	 * @return array
+	 */
+	public function getRolesWithPermission($permission): array
+	{
+		if (!is_array($permission)) {
+			$permission = [$permission];
+		}
+		return $this->db
+			->select("r.*")
+			->join("{$this->tables['role_permissions']} as rp", 'r.id = rp.role_id')
+			->join("{$this->tables['permissions']} as p", 'rp.permission_id = p.id')
+			->where_in('p.id', $permission)
+			->or_where_in('p.name', $permission)
+			->group_by('r.id')
+			->get("{$this->tables['roles']} as r")->result();
 	}
 
 	// * DONE
@@ -744,23 +800,20 @@ class MY_Auth
 	 * Create new role.
 	 * @method createRole()
 	 *
-	 * @param  string $name
-	 * @param  array $additional_data
-	 * @return array => key ['status', 'id']
+	 * @param  string $name Name of role
+	 * @param  array $data Additional role data
+	 * @return array => ['status', 'id']
 	 */
-	public function createRole(string $name, array $additional_data = [])
+	public function createRole(string $name, array $data = []): array
 	{
 		$result = ['status' => false, 'id' => null];
-		$data = $this->_filterData($this->tables['roles'], array_merge($additional_data, [
+		$data = $this->_filterData($this->tables['roles'], array_merge($data, [
 			'name' => $name
 		]));
 		$result_insert = $this->db->insert($this->tables['roles'], $data);
 		if ($result_insert) {
 			$result['id'] = $this->db->insert_id();
 			$result['status'] = true;
-			$this->_setMessage('create_role_successful');
-		} else {
-			$this->_setError('create_role_unsuccessful');
 		}
 		return $result;
 	}
@@ -770,20 +823,14 @@ class MY_Auth
 	 * Update role.
 	 * @method updateRole()
 	 *
-	 * @param  int $id
-	 * @param  array $data
+	 * @param  int $id ID of role
+	 * @param  array $data Additional role data
 	 * @return bool
 	 */
-	public function updateRole(int $id, array $data = [])
+	public function updateRole(int $id, array $data = []): bool
 	{
 		$data = $this->_filterData($this->tables['roles'], $data);
-		$result = $this->db->update($this->tables['roles'], $data, ['id' => $id]);
-		if ($result) {
-			$this->_setMessage('update_role_successful');
-		} else {
-			$this->_setError('update_role_unsuccessful');
-		}
-		return $result;
+		return $this->db->update($this->tables['roles'], $data, ['id' => $id]);
 	}
 
 	// * DONE
@@ -791,90 +838,77 @@ class MY_Auth
 	 * Delete role.
 	 * @method deleteRole()
 	 *
-	 * @param  int $id
+	 * @param  int $id ID of role
 	 * @return bool
 	 */
-	public function deleteRole(int $id)
+	public function deleteRole(int $id): bool
 	{
-		$result = $this->db->delete($this->tables['roles'], ['id' => $id]);
-		if ($result) {
-			$this->_setMessage('delete_role_successful');
-		} else {
-			$this->_setError('delete_role_unsuccessful');
-		}
-		return $result;
+		return $this->db->delete($this->tables['roles'], ['id' => $id]) ? true : false;
 	}
 
 	// * DONE
 	/**
-	 * Add user to role.
-	 * note:
-	 * - $key can be the id or name of the role.
+	 * Assign users to roles.
 	 * @method assignRole()
 	 *
-	 * @param  int|string|array $key
-	 * @param  int $user_id
+	 * @param  int|string|array $role ID or name of role
+	 * @param  int $user_id ID of user
 	 * @return bool
 	 */
-	public function assignRole($key, int $user_id)
+	public function assignRole($role, int $user_id): bool
 	{
-		if (!is_array($key)) {
-			$key = [$key];
+		if (!is_array($role)) {
+			$role = [$role];
 		}
-		$user = $this->user($user_id);
+		$user = $this->db->get_where($this->tables['users'], ['id' => $user_id])->row();
 		$roles = $this->db
 			->select('id')
-			->where_in('id', $key)
-			->or_where_in('name', $key)
+			->where_in('id', $role)
+			->or_where_in('name', $role)
 			->get($this->tables['roles'])->result();
 		if (!$user || !$roles) {
-			$this->_setError('assign_role_unsuccessful');
 			return false;
 		}
-		$effected = 0;
 		// Then insert each into the database
 		foreach ($roles as $role) {
-			if (!$this->hasRole($role->id, $user_id)) {
-				$result_insert = $this->db->insert(
+			$check_user_role = $this->db->get_where($this->tables['user_roles'], [
+				'user_id' => $user_id,
+				'role_id' => $role->id,
+			])->row();
+			if (!$check_user_role) {
+				$this->db->insert(
 					$this->tables['user_roles'],
 					[
 						'user_id' => $user_id,
 						'role_id' => $role->id,
 					]
 				);
-				if ($result_insert) {
-					$effected++;
-				}
 			}
 		}
-		$this->_setMessage('assign_role_successful');
-		return $effected > 0;
+		return true;
 	}
 
 	// * DONE
 	/**
-	 * Remove role from user.
-	 * note:
-	 * - $key can be the id or name of the role.
-	 * @method removeRole()
+	 * Revoke the role from the user.
+	 * @method revokeRole()
 	 *
-	 * @param  int|string|array $key
-	 * @param  int $user_id
+	 * @param  int|string|array $role ID or name of role
+	 * @param  int $user_id ID of user
 	 * @return bool
 	 */
-	public function removeRole($key, int $user_id)
+	public function revokeRole($role, int $user_id): bool
 	{
-		if (!is_array($key)) {
-			$key = [$key];
+		if (!is_array($role)) {
+			$role = [$role];
 		}
-		$user = $this->user($user_id);
+		$user = $this->db->get_where($this->tables['users'], ['id' => $user_id])->row();
 		$roles = $this->db
 			->select('id')
-			->where_in('id', $key)
-			->or_where_in('name', $key)
+			->where_in('id', $role)
+			->or_where_in('name', $role)
 			->get($this->tables['roles'])->result();
 		if (!$user || !$roles) {
-			$this->_setError('remove_role_unsuccessful');
 			return false;
 		}
 		foreach ($roles as $role) {
@@ -883,62 +917,48 @@ class MY_Auth
 				['user_id' => $user_id, 'role_id' => $role->id]
 			);
 		}
-		$this->_setMessage('remove_role_successful');
 		return true;
 	}
 
 	// * DONE
 	/**
-	 * Get user role.
-	 * note:
-	 * - if $user_id is null, it will return the roles of the current user session.
-	 * @method getRoles()
+	 * get all roles from current user session
+	 * @method getCurrentRoles()
 	 *
-	 * @param  int|null $user_id
-	 * @return array
+	 * @param bool $first if set to true it will return the first role
+	 * @return array|string
 	 */
-	public function getRoles(int $user_id = null)
+	public function getCurrentRoles(bool $first = false)
 	{
-		if ($user_id) {
-			return $this->db
-				->select('r.id, r.name')
-				->join("{$this->tables['user_roles']} as ru", 'r.id = ru.role_id')
-				->where(['ru.user_id' => $user_id])
-				->group_by('ru.role_id')
-				->get("{$this->tables['roles']} as r")->result();
-		}
-		return $this->session->userdata('roles') ?? [];
+		$roles = $this->session->userdata('roles') ?? [];
+		return $first ? ($roles[0] ?? '') : $roles;
 	}
 
 	// * DONE
 	/**
 	 * Check if the user has the role.
-	 * note:
-	 * - If $user_id is null, the value used is the current user session.
-	 * - $key can be the id or name of the role.
-	 * - $check_all will check all data if $key is an array
 	 * @method hasRole()
 	 *
-	 * @param  int|string|array $key
-	 * @param  int|null $user_id
-	 * @param  bool $check_all
+	 * @param  int|string|array $role ID or name of role
+	 * @param  int|null $user_id If $user_id is null, the value used is the current user session
+	 * @param  bool $check_all If set to true, it will check the entire array value in the $role variable
 	 * @return bool
 	 */
-	public function hasRole($key, int $user_id = null, $check_all = false)
+	public function hasRole($role, int $user_id = null, $check_all = false): bool
 	{
-		$user_roles = $this->getRoles($user_id);
-		$user_id || $user_id = $this->session->userdata('user_id');
+		$user_roles = $user_id ? $this->getRolesWithUser($user_id) : $this->getCurrentRoles();
+		$user_id = $user_id ?? $this->session->userdata('user_id');
 		if (!$user_roles || !$user_id) {
 			return false;
 		}
-		if (!is_array($key)) {
-			$key = [$key];
+		if (!is_array($role)) {
+			$role = [$role];
 		}
 		$roles_array = [];
-		foreach ($user_roles as $role) {
-			$roles_array[$role->id] = strtolower($role->name);
+		foreach ($user_roles as $user_role) {
+			$roles_array[$user_role->id] = strtolower($user_role->name);
 		}
-		foreach ($key as $value) {
+		foreach ($role as $value) {
 			$roles = (is_numeric($value)) ? array_keys($roles_array) : $roles_array;
 			if (in_array(strtolower($value), $roles) xor $check_all) {
 				return !$check_all;
@@ -947,14 +967,29 @@ class MY_Auth
 		return $check_all;
 	}
 
-	// ? Permission ------------------------------------------------------------------------
+	// ! Start Permission ------------------------------------------------------------------------
 
 	// * DONE
 	/**
-	 * Get a permissions.
+	 * Permission builder.
+	 * @method permissionBuilder
+	 *
+	 * @param  string|null $as Alias table of permission
+	 * @return CI_DB_query_builder
+	 */
+	public function permissionBuilder(string $as = null): CI_DB_query_builder
+	{
+		$table = $as ? ($this->tables['permissions'] . " as " . $as) : $this->tables['permissions'];
+		$this->db->from($table);
+		return $this->db;
+	}
+
+	// * DONE
+	/**
+	 * Get permission by id.
 	 * @method permission()
 	 *
-	 * @param  int $id
+	 * @param  int $id ID of permission
 	 * @return object|null
 	 */
 	public function permission(int $id)
@@ -964,14 +999,61 @@ class MY_Auth
 
 	// * DONE
 	/**
-	 * Get the permissions.
+	 * Get all permissions.
 	 * @method permissions()
-	 *
+	 * 
 	 * @return array
 	 */
-	public function permissions()
+	public function permissions(): array
 	{
 		return $this->db->get($this->tables['permissions'])->result();
+	}
+
+	// * DONE
+	/**
+	 * Get all permissions with a specific user.
+	 * @method getPermissionsWithUser()
+	 *
+	 * @param  int $user_id ID or user
+	 * @param  bool $chunk_resource if set to true it will return data based on the resource
+	 * @return array
+	 */
+	public function getPermissionsWithUser(int $user_id, bool $chunk_resource = false): array
+	{
+		$permissions = $this->db
+			->select('p.*')
+			->join("{$this->tables['role_permissions']} as rp", 'p.id = rp.permission_id')
+			->join("{$this->tables['roles']} as r", 'rp.role_id = r.id')
+			->join("{$this->tables['user_roles']} as ur", 'r.id = ur.role_id')
+			->where('ur.user_id', $user_id)
+			->group_by('p.id')
+			->get("{$this->tables['permissions']} as p")->result();
+		return $chunk_resource ? $this->_chunkPermissionByResource($permissions) : $permissions;
+	}
+
+	// * DONE
+	/**
+	 * Get all permissions with a specific role.
+	 * @method getPermissionsWithRole()
+	 *
+	 * @param  int|string|array $role ID or name of role
+	 * @param  bool $chunk_resource if set to true it will return data based on the resource
+	 * @return array
+	 */
+	public function getPermissionsWithRole($role, bool $chunk_resource = false): array
+	{
+		if (!is_array($role)) {
+			$role = [$role];
+		}
+		$permissions = $this->db
+			->select('p.*')
+			->join("{$this->tables['role_permissions']} as rp", 'p.id = rp.permission_id')
+			->join("{$this->tables['roles']} as r", 'rp.role_id = r.id')
+			->where_in('r.id', $role)
+			->or_where_in('r.name', $role)
+			->group_by('p.id')
+			->get("{$this->tables['permissions']} as p")->result();
+		return $chunk_resource ? $this->_chunkPermissionByResource($permissions) : $permissions;
 	}
 
 	// * DONE
@@ -979,23 +1061,20 @@ class MY_Auth
 	 * Create new permission.
 	 * @method createPermission()
 	 *
-	 * @param  string $name
-	 * @param  array $additional_data
-	 * @return array => key ['status', 'id']
+	 * @param  string $name Name of permission
+	 * @param  array $data Additional permission data
+	 * @return array => ['status', 'id']
 	 */
-	public function createPermission(string $name, array $additional_data = [])
+	public function createPermission(string $name, array $data = []): array
 	{
 		$result = ['status' => false, 'id' => null];
-		$data = $this->_filterData($this->tables['permissions'], array_merge($additional_data, [
+		$data = $this->_filterData($this->tables['permissions'], array_merge($data, [
 			'name' => $name
 		]));
 		$result_insert = $this->db->insert($this->tables['permissions'], $data);
 		if ($result_insert) {
 			$result['id'] = $this->db->insert_id();
 			$result['status'] = true;
-			$this->_setMessage('create_permission_successful');
-		} else {
-			$this->_setError('create_permission_unsuccessful');
 		}
 		return $result;
 	}
@@ -1005,111 +1084,92 @@ class MY_Auth
 	 * Update permission.
 	 * @method updatePermission()
 	 *
-	 * @param  int $id
-	 * @param  array $data
+	 * @param  int $id ID of permission
+	 * @param  array $data Additional permission data
 	 * @return bool
 	 */
-	public function updatePermission(int $id, array $data = [])
+	public function updatePermission(int $id, array $data = []): bool
 	{
 		$data = $this->_filterData($this->tables['permissions'], $data);
-		$result = $this->db->update($this->tables['permissions'], $data, ['id' => $id]);
-		if ($result) {
-			$this->_setMessage('update_permission_successful');
-		} else {
-			$this->_setError('update_permission_unsuccessful');
-		}
-		return $result;
+		return $this->db->update($this->tables['permissions'], $data, ['id' => $id]);
 	}
 
 	// * DONE
 	/**
 	 * Delete permission.
-	 * @method deleteRole()
+	 * @method deletePermission()
 	 *
-	 * @param  int $id
+	 * @param  int $id ID of permission
 	 * @return bool
 	 */
-	public function deletePermission(int $id)
+	public function deletePermission(int $id): bool
 	{
-		$result = $this->db->delete($this->tables['permissions'], ['id' => $id]);
-		if ($result) {
-			$this->_setMessage('delete_permission_successful');
-		} else {
-			$this->_setError('delete_permission_unsuccessful');
-		}
-		return $result;
+		return $this->db->delete($this->tables['permissions'], ['id' => $id]) ? true : false;
 	}
 
 	// * DONE
 	/**
-	 * Add role to permission.
-	 * note:
-	 * - $key can be the id or name of the permission.
+	 * Assign roles to permissions.
 	 * @method assignPermission()
 	 *
-	 * @param  int|string|array $key
-	 * @param  int $role_id
+	 * @param  int|string|array $permission ID or name of permission
+	 * @param  int $role_id ID of role
 	 * @return bool
 	 */
-	public function assignPermission($key, int $role_id)
+	public function assignPermission($permission, int $role_id): bool
 	{
-		if (!is_array($key)) {
-			$key = [$key];
+		if (!is_array($permission)) {
+			$permission = [$permission];
 		}
-		$role = $this->role($role_id);
+		$role = $this->db->get_where($this->tables['roles'], ['id' => $role_id])->row();
 		$permissions = $this->db
 			->select('id')
-			->where_in('id', $key)
-			->or_where_in('name', $key)
+			->where_in('id', $permission)
+			->or_where_in('name', $permission)
 			->get($this->tables['permissions'])->result();
 		if (!$role || !$permissions) {
-			$this->_setError('assign_permission_unsuccessful');
 			return false;
 		}
-		$effected = 0;
 		// Then insert each into the database
 		foreach ($permissions as $permission) {
-			if (!$this->hasPermission($permission->id, $role_id)) {
-				$result_insert = $this->db->insert(
+			$check_role_permission = $this->db->get_where($this->tables['role_permissions'], [
+				'role_id' => $role_id,
+				'permission_id' => $permission->id,
+			])->row();
+			if (!$check_role_permission) {
+				$this->db->insert(
 					$this->tables['role_permissions'],
 					[
 						'role_id' => $role_id,
 						'permission_id' => $permission->id,
 					]
 				);
-				if ($result_insert) {
-					$effected++;
-				}
 			}
 		}
-		$this->_setMessage('assign_permission_successful');
-		return $effected > 0;
+		return true;
 	}
 
 	// * DONE
 	/**
-	 * Remove permission from role.
-	 * note:
-	 * - $key can be the id or name of the permission.
-	 * @method removePermission()
+	 * Revoke the permission from the role.
+	 * @method revokePermission()
 	 *
-	 * @param  int|string|array $key
-	 * @param  int $role_id
+	 * @param  int|string|array $permission ID or name of permission
+	 * @param  int $role_id ID of role
 	 * @return bool
 	 */
-	public function removePermission($key, int $role_id)
+	public function revokePermission($permission, int $role_id): bool
 	{
-		if (!is_array($key)) {
-			$key = [$key];
+		if (!is_array($permission)) {
+			$permission = [$permission];
 		}
-		$role = $this->role($role_id);
+		$role = $this->db->get_where($this->tables['roles'], ['id' => $role_id])->row();
 		$permissions = $this->db
 			->select('id')
-			->where_in('id', $key)
-			->or_where_in('name', $key)
+			->where_in('id', $permission)
+			->or_where_in('name', $permission)
 			->get($this->tables['permissions'])->result();
 		if (!$role || !$permissions) {
-			$this->_setError('remove_permission_unsuccessful');
 			return false;
 		}
 		foreach ($permissions as $permission) {
@@ -1118,64 +1178,46 @@ class MY_Auth
 				['role_id' => $role_id, 'permission_id' => $permission->id]
 			);
 		}
-		$this->_setMessage('remove_permission_successful');
 		return true;
 	}
 
 	// * DONE
 	/**
-	 * Get user permission.
-	 * note:
-	 * - if $user_id is null, it will return the permissions of the current user session.
-	 * @method getPermissions()
+	 * get all permissions from current user session
+	 * @method getCurrentPermissions()
 	 *
-	 * @param  int|null $user_id
 	 * @return array
 	 */
-	public function getPermissions(int $user_id = null)
+	public function getCurrentPermissions(): array
 	{
-		if ($user_id) {
-			return $this->db
-				->select('p.id, p.name')
-				->join("{$this->tables['role_permissions']} as rp", 'p.id = rp.permission_id')
-				->join("{$this->tables['roles']} as r", 'rp.role_id = r.id')
-				->join("{$this->tables['user_roles']} as ur", 'r.id = ur.role_id')
-				->where(['ur.user_id' => $user_id])
-				->group_by('rp.permission_id')
-				->get("{$this->tables['permissions']} as p")->result();
-		}
 		return $this->session->userdata('permissions') ?? [];
 	}
 
 	// * DONE
 	/**
 	 * Check if the user has the permission.
-	 * note:
-	 * - If $user_id is null, the value used is the current user session.
-	 * - $key can be the id or name of the permission.
-	 * - $check_all will check all data if $key is an array
 	 * @method hasPermission()
 	 *
-	 * @param  int|string|array $key
-	 * @param  int|null $user_id
-	 * @param  bool $check_all
+	 * @param  int|string|array $permission ID or name of permission
+	 * @param  int|null $user_id If $user_id is null, the value used is the current user session
+	 * @param  bool $check_all If set to true, it will check the entire array value in the $permission variable
 	 * @return bool
 	 */
-	public function hasPermission($key, int $user_id = null, $check_all = false)
+	public function hasPermission($permission, int $user_id = null, $check_all = false): bool
 	{
-		$user_permissions = $this->getPermissions($user_id);
-		$user_id || $user_id = $this->session->userdata('user_id');
+		$user_permissions = $user_id ? $this->getPermissionsWithUser($user_id) : $this->getCurrentPermissions();
+		$user_id = $user_id ?? $this->session->userdata('user_id');
 		if (!$user_permissions || !$user_id) {
 			return false;
 		}
-		if (!is_array($key)) {
-			$key = [$key];
+		if (!is_array($permission)) {
+			$permission = [$permission];
 		}
 		$permissions_array = [];
-		foreach ($user_permissions as $permission) {
-			$permissions_array[$permission->id] = strtolower($permission->name);
+		foreach ($user_permissions as $user_permission) {
+			$permissions_array[$user_permission->id] = strtolower($user_permission->name);
 		}
-		foreach ($key as $value) {
+		foreach ($permission as $value) {
 			$permissions = (is_numeric($value)) ? array_keys($permissions_array) : $permissions_array;
 			if (in_array(strtolower($value), $permissions) xor $check_all) {
 				return !$check_all;
@@ -1184,7 +1226,7 @@ class MY_Auth
 		return $check_all;
 	}
 
-	// ? Util ------------------------------------------------------------------------
+	// ! Start Util ------------------------------------------------------------------------
 
 	// * DONE
 	/**
@@ -1319,8 +1361,8 @@ class MY_Auth
 		$session_hash = $this->session->userdata('auth_session_hash');
 		if ($user_id && $identity && $session_hash && $session_hash === $this->config->item('session_hash', 'auth')) {
 			$this->session->set_userdata([
-				'roles' => $this->getRoles($user_id),
-				'permissions' => $this->getPermissions($user_id),
+				'roles' => $this->getRolesWithUser($user_id),
+				'permissions' => $this->getPermissionsWithUser($user_id),
 			]);
 			return true;
 		}
@@ -1640,13 +1682,13 @@ class MY_Auth
 		$session_data = [
 			'identity' => $user->{$this->identity},
 			'user_id' => $user->id, //everyone likes to overwrite id so we'll use user_id
-			'email' => $user->email,
+			'email' => $user->email ?? '',
 			'last_login' => $user->last_login,
 			'last_check' => date('Y-m-d H:i:s'),
 			'auth_session_hash' => $this->config->item('session_hash', 'auth'),
 			// $this->identity => $user->{$this->identity},
-			'roles' => $this->getRoles($user->id),
-			'permissions' => $this->getPermissions($user->id)
+			'roles' => $this->getRolesWithUser($user->id),
+			'permissions' => $this->getPermissionsWithUser($user->id)
 		];
 		$this->session->set_userdata($session_data);
 	}
@@ -1834,6 +1876,26 @@ class MY_Auth
 		}
 		delete_cookie($this->config->item('remember_cookie_name', 'auth'));
 		return false;
+	}
+
+	/**
+	 * Chunk permission by resource
+	 * @method _chunkPermissionByResource
+	 *
+	 * @param  array $permissions
+	 * @return array
+	 */
+	private function _chunkPermissionByResource(array $permissions)
+	{
+		$result = [];
+		foreach ($permissions as $permission) {
+			[$resource, $action] = explode('.', $permission->name ?? '');
+			if ($resource) {
+				$permission->action = $action ?? '';
+				$result[$resource][] = $permission;
+			}
+		}
+		return $result;
 	}
 }
 

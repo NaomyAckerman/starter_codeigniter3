@@ -1,6 +1,6 @@
 <?php defined('BASEPATH') or exit('No direct script access allowed');
 
-class Welcome extends Base_Controller
+class Welcome extends Guest_Controller
 {
 	public function __construct()
 	{
