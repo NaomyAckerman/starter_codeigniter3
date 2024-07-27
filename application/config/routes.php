@@ -50,11 +50,11 @@ defined('BASEPATH') or exit('No direct script access allowed');
 |		my-controller/my-method	-> my_controller/my_method
 */
 $route['default_controller'] = 'welcome';
-$route['404_override'] = 'notfound';
+$route['404_override'] = 'util/notfound';
 $route['translate_uri_dashes'] = FALSE;
 
 // * Utils ------------------------------------------------------------------------
-$route['media/(:any)'] = 'media/index/$1';
+$route['media/(:any)'] = 'util/media/index/$1';
 
 // * Authentication ------------------------------------------------------------------------
 $route['logout'] = 'auth/logout';
