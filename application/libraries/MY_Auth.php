@@ -714,7 +714,6 @@ class MY_Auth
 
 	// ! Start Role ------------------------------------------------------------------------
 
-	// * DONE
 	/**
 	 * Role builder.
 	 * @method roleBuilder
@@ -729,7 +728,6 @@ class MY_Auth
 		return $this->db;
 	}
 
-	// * DONE
 	/**
 	 * Get role by id.
 	 * @method role()
@@ -742,19 +740,17 @@ class MY_Auth
 		return $this->db->get_where($this->tables['roles'], ['id' => $id])->row();
 	}
 
-	// * DONE
 	/**
 	 * Get all roles.
 	 * @method roles()
 	 * 
 	 * @return array
 	 */
-	public function roles(): array
+	public function roles()
 	{
 		return $this->db->get($this->tables['roles'])->result();
 	}
 
-	// * DONE
 	/**
 	 * Get all roles with a specific user.
 	 * @method getRolesWithUser()
@@ -762,7 +758,7 @@ class MY_Auth
 	 * @param  int $user_id ID or user
 	 * @return array
 	 */
-	public function getRolesWithUser(int $user_id): array
+	public function getRolesWithUser(int $user_id)
 	{
 		return $this->db
 			->select('r.*')
@@ -772,7 +768,6 @@ class MY_Auth
 			->get("{$this->tables['roles']} as r")->result();
 	}
 
-	// * DONE
 	/**
 	 * Get all roles with specific permissions.
 	 * @method getRolesWithPermission()
@@ -780,7 +775,7 @@ class MY_Auth
 	 * @param  int|string|array $permission ID or name of permission, format of name (resource.action)
 	 * @return array
 	 */
-	public function getRolesWithPermission($permission): array
+	public function getRolesWithPermission($permission)
 	{
 		if (!is_array($permission)) {
 			$permission = [$permission];
@@ -795,7 +790,6 @@ class MY_Auth
 			->get("{$this->tables['roles']} as r")->result();
 	}
 
-	// * DONE
 	/**
 	 * Create new role.
 	 * @method createRole()
@@ -804,7 +798,7 @@ class MY_Auth
 	 * @param  array $data Additional role data
 	 * @return array => ['status', 'id']
 	 */
-	public function createRole(string $name, array $data = []): array
+	public function createRole(string $name, array $data = [])
 	{
 		$result = ['status' => false, 'id' => null];
 		$data = $this->_filterData($this->tables['roles'], array_merge($data, [
@@ -818,7 +812,6 @@ class MY_Auth
 		return $result;
 	}
 
-	// * DONE
 	/**
 	 * Update role.
 	 * @method updateRole()
@@ -827,13 +820,12 @@ class MY_Auth
 	 * @param  array $data Additional role data
 	 * @return bool
 	 */
-	public function updateRole(int $id, array $data = []): bool
+	public function updateRole(int $id, array $data = [])
 	{
 		$data = $this->_filterData($this->tables['roles'], $data);
 		return $this->db->update($this->tables['roles'], $data, ['id' => $id]);
 	}
 
-	// * DONE
 	/**
 	 * Delete role.
 	 * @method deleteRole()
@@ -841,12 +833,11 @@ class MY_Auth
 	 * @param  int $id ID of role
 	 * @return bool
 	 */
-	public function deleteRole(int $id): bool
+	public function deleteRole(int $id)
 	{
 		return $this->db->delete($this->tables['roles'], ['id' => $id]) ? true : false;
 	}
 
-	// * DONE
 	/**
 	 * Assign users to roles.
 	 * @method assignRole()
@@ -855,7 +846,7 @@ class MY_Auth
 	 * @param  int $user_id ID of user
 	 * @return bool
 	 */
-	public function assignRole($role, int $user_id): bool
+	public function assignRole($role, int $user_id)
 	{
 		if (!is_array($role)) {
 			$role = [$role];
@@ -888,7 +879,6 @@ class MY_Auth
 		return true;
 	}
 
-	// * DONE
 	/**
 	 * Revoke the role from the user.
 	 * @method revokeRole()
@@ -897,7 +887,7 @@ class MY_Auth
 	 * @param  int $user_id ID of user
 	 * @return bool
 	 */
-	public function revokeRole($role, int $user_id): bool
+	public function revokeRole($role, int $user_id)
 	{
 		if (!is_array($role)) {
 			$role = [$role];
@@ -920,7 +910,6 @@ class MY_Auth
 		return true;
 	}
 
-	// * DONE
 	/**
 	 * get all roles from current user session
 	 * @method getCurrentRoles()
@@ -934,7 +923,6 @@ class MY_Auth
 		return $first ? ($roles[0] ?? '') : $roles;
 	}
 
-	// * DONE
 	/**
 	 * Check if the user has the role.
 	 * @method hasRole()
@@ -944,7 +932,7 @@ class MY_Auth
 	 * @param  bool $check_all If set to true, it will check the entire array value in the $role variable
 	 * @return bool
 	 */
-	public function hasRole($role, int $user_id = null, $check_all = false): bool
+	public function hasRole($role, int $user_id = null, $check_all = false)
 	{
 		$user_roles = $user_id ? $this->getRolesWithUser($user_id) : $this->getCurrentRoles();
 		$user_id = $user_id ?? $this->session->userdata('user_id');
@@ -969,7 +957,6 @@ class MY_Auth
 
 	// ! Start Permission ------------------------------------------------------------------------
 
-	// * DONE
 	/**
 	 * Permission builder.
 	 * @method permissionBuilder
@@ -984,7 +971,6 @@ class MY_Auth
 		return $this->db;
 	}
 
-	// * DONE
 	/**
 	 * Get permission by id.
 	 * @method permission()
@@ -997,19 +983,17 @@ class MY_Auth
 		return $this->db->get_where($this->tables['permissions'], ['id' => $id])->row();
 	}
 
-	// * DONE
 	/**
 	 * Get all permissions.
 	 * @method permissions()
 	 * 
 	 * @return array
 	 */
-	public function permissions(): array
+	public function permissions()
 	{
 		return $this->db->get($this->tables['permissions'])->result();
 	}
 
-	// * DONE
 	/**
 	 * Get all permissions with a specific user.
 	 * @method getPermissionsWithUser()
@@ -1018,7 +1002,7 @@ class MY_Auth
 	 * @param  bool $chunk_resource if set to true it will return data based on the resource
 	 * @return array
 	 */
-	public function getPermissionsWithUser(int $user_id, bool $chunk_resource = false): array
+	public function getPermissionsWithUser(int $user_id, bool $chunk_resource = false)
 	{
 		$permissions = $this->db
 			->select('p.*')
@@ -1031,7 +1015,6 @@ class MY_Auth
 		return $chunk_resource ? $this->_chunkPermissionByResource($permissions) : $permissions;
 	}
 
-	// * DONE
 	/**
 	 * Get all permissions with a specific role.
 	 * @method getPermissionsWithRole()
@@ -1040,7 +1023,7 @@ class MY_Auth
 	 * @param  bool $chunk_resource if set to true it will return data based on the resource
 	 * @return array
 	 */
-	public function getPermissionsWithRole($role, bool $chunk_resource = false): array
+	public function getPermissionsWithRole($role, bool $chunk_resource = false)
 	{
 		if (!is_array($role)) {
 			$role = [$role];
@@ -1056,7 +1039,6 @@ class MY_Auth
 		return $chunk_resource ? $this->_chunkPermissionByResource($permissions) : $permissions;
 	}
 
-	// * DONE
 	/**
 	 * Create new permission.
 	 * @method createPermission()
@@ -1065,7 +1047,7 @@ class MY_Auth
 	 * @param  array $data Additional permission data
 	 * @return array => ['status', 'id']
 	 */
-	public function createPermission(string $name, array $data = []): array
+	public function createPermission(string $name, array $data = [])
 	{
 		$result = ['status' => false, 'id' => null];
 		$data = $this->_filterData($this->tables['permissions'], array_merge($data, [
@@ -1079,7 +1061,6 @@ class MY_Auth
 		return $result;
 	}
 
-	// * DONE
 	/**
 	 * Update permission.
 	 * @method updatePermission()
@@ -1088,13 +1069,12 @@ class MY_Auth
 	 * @param  array $data Additional permission data
 	 * @return bool
 	 */
-	public function updatePermission(int $id, array $data = []): bool
+	public function updatePermission(int $id, array $data = [])
 	{
 		$data = $this->_filterData($this->tables['permissions'], $data);
 		return $this->db->update($this->tables['permissions'], $data, ['id' => $id]);
 	}
 
-	// * DONE
 	/**
 	 * Delete permission.
 	 * @method deletePermission()
@@ -1102,12 +1082,11 @@ class MY_Auth
 	 * @param  int $id ID of permission
 	 * @return bool
 	 */
-	public function deletePermission(int $id): bool
+	public function deletePermission(int $id)
 	{
 		return $this->db->delete($this->tables['permissions'], ['id' => $id]) ? true : false;
 	}
 
-	// * DONE
 	/**
 	 * Assign roles to permissions.
 	 * @method assignPermission()
@@ -1116,7 +1095,7 @@ class MY_Auth
 	 * @param  int $role_id ID of role
 	 * @return bool
 	 */
-	public function assignPermission($permission, int $role_id): bool
+	public function assignPermission($permission, int $role_id)
 	{
 		if (!is_array($permission)) {
 			$permission = [$permission];
@@ -1149,7 +1128,6 @@ class MY_Auth
 		return true;
 	}
 
-	// * DONE
 	/**
 	 * Revoke the permission from the role.
 	 * @method revokePermission()
@@ -1158,7 +1136,7 @@ class MY_Auth
 	 * @param  int $role_id ID of role
 	 * @return bool
 	 */
-	public function revokePermission($permission, int $role_id): bool
+	public function revokePermission($permission, int $role_id)
 	{
 		if (!is_array($permission)) {
 			$permission = [$permission];
@@ -1181,19 +1159,17 @@ class MY_Auth
 		return true;
 	}
 
-	// * DONE
 	/**
 	 * get all permissions from current user session
 	 * @method getCurrentPermissions()
 	 *
 	 * @return array
 	 */
-	public function getCurrentPermissions(): array
+	public function getCurrentPermissions()
 	{
 		return $this->session->userdata('permissions') ?? [];
 	}
 
-	// * DONE
 	/**
 	 * Check if the user has the permission.
 	 * @method hasPermission()
@@ -1203,7 +1179,7 @@ class MY_Auth
 	 * @param  bool $check_all If set to true, it will check the entire array value in the $permission variable
 	 * @return bool
 	 */
-	public function hasPermission($permission, int $user_id = null, $check_all = false): bool
+	public function hasPermission($permission, int $user_id = null, $check_all = false)
 	{
 		$user_permissions = $user_id ? $this->getPermissionsWithUser($user_id) : $this->getCurrentPermissions();
 		$user_id = $user_id ?? $this->session->userdata('user_id');
@@ -1669,12 +1645,11 @@ class MY_Auth
 		])->num_rows() > 0;
 	}
 
-	// * DONE
 	/**
 	 * Set user session
 	 * @method _setSession()
 	 *
-	 * @param object $user
+	 * @param object $user User data
 	 * @return void
 	 */
 	protected function _setSession(object $user)
@@ -1686,7 +1661,6 @@ class MY_Auth
 			'last_login' => $user->last_login,
 			'last_check' => date('Y-m-d H:i:s'),
 			'auth_session_hash' => $this->config->item('session_hash', 'auth'),
-			// $this->identity => $user->{$this->identity},
 			'roles' => $this->getRolesWithUser($user->id),
 			'permissions' => $this->getPermissionsWithUser($user->id)
 		];
@@ -1753,7 +1727,6 @@ class MY_Auth
 		return false;
 	}
 
-	// * DONE
 	/**
 	 * Verifies if the session should be rechecked according to the configuration item recheck_timer. If it does, then
 	 * it will check if the user is still active
@@ -1767,8 +1740,8 @@ class MY_Auth
 		if (!$identity) {
 			return false;
 		}
-		$recheck = (NULL !== $this->config->item('recheck_timer', 'auth')) ? $this->config->item('recheck_timer', 'auth') : 0;
-		if ($recheck !== 0) {
+		$recheck = $this->config->item('recheck_timer', 'auth') ?: 0;
+		if ($recheck > 0) {
 			$last_login = $this->session->userdata('last_check');
 			if (strtotime($last_login) + $recheck < time()) {
 				$query = $this->db->select('id')
@@ -1782,13 +1755,21 @@ class MY_Auth
 				if ($query->num_rows() === 1) {
 					$this->session->set_userdata('last_check', date('Y-m-d H:i:s'));
 				} else {
-					$this->session->unset_userdata([$this->identity, 'id', 'user_id', 'roles', 'permissions']);
+					$this->session->unset_userdata(['identity', 'user_id', 'auth_session_hash', 'roles', 'permissions']);
+					// delete the remember me cookies if they exist
+					delete_cookie($this->config->item('remember_cookie_name', 'auth'));
+					// Clear all codes
+					$this->_clearForgottenPasswordCode($this->identity);
+					$this->_clearRememberCode($this->identity);
+					// Destroy the session
+					$this->session->sess_destroy();
 					return false;
 				}
 			}
 		}
-		$session_hash = $this->session->userdata('auth_session_hash');
-		return (bool) $session_hash && $session_hash === $this->config->item('session_hash', 'auth');
+		$current_session_hash = $this->session->userdata('auth_session_hash');
+		$session_hash = $this->config->item('session_hash', 'auth');
+		return (bool) $current_session_hash && ($current_session_hash === $session_hash);
 	}
 
 	// * DONE
@@ -1878,6 +1859,7 @@ class MY_Auth
 		return false;
 	}
 
+	// * DONE
 	/**
 	 * Chunk permission by resource
 	 * @method _chunkPermissionByResource

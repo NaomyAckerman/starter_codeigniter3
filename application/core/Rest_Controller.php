@@ -35,4 +35,28 @@ class Rest_Controller extends RestController
 			$this->_delete_args = $this->input->input_stream();
 		}
 	}
+
+	public function bearerToken()
+	{
+		$headers = null;
+		if (isset($_SERVER['Authorization'])) {
+			$headers = trim($_SERVER["Authorization"]);
+		} else if (isset($_SERVER['HTTP_AUTHORIZATION'])) { // Nginx or fast CGI
+			$headers = trim($_SERVER["HTTP_AUTHORIZATION"]);
+		} elseif (function_exists('apache_request_headers')) {
+			$requestHeaders = apache_request_headers();
+			// Server-side fix for bug in old versions of PHP
+			if (isset($requestHeaders['Authorization'])) {
+				$headers = trim($requestHeaders['Authorization']);
+			}
+		}
+
+		// HEADER: Get the access token from the header
+		if ($headers) {
+			if (preg_match('/Bearer\s(\S+)/', $headers, $matches)) {
+				return $matches[1];
+			}
+		}
+		return '';
+	}
 }

@@ -10,6 +10,7 @@ class Base_Controller extends MX_Controller
 {
 	use CI_Type;
 
+	public array $force_method_request = [];
 	private string $layout = '';
 	private string $theme = '';
 	private array $data = [];
@@ -99,7 +100,8 @@ class Base_Controller extends MX_Controller
 		if ($theme) {
 			$this->data['meta']->theme = $theme;
 			$this->theme = $theme;
-			// $this->config->set_item('error_views_path', FCPATH . "themes/$theme/errors/");
+			$error_views_path = VIEWPATH . $theme . DIRECTORY_SEPARATOR . "errors" . DIRECTORY_SEPARATOR;
+			$this->config->set_item('error_views_path', $error_views_path);
 		}
 		return $this;
 	}
@@ -124,7 +126,6 @@ class Base_Controller extends MX_Controller
 				break;
 			$data = is_array($data) ? $data[$key] ?? null : $data->$key ?? null;
 		}
-		;
 		return $data;
 	}
 

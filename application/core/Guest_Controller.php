@@ -11,9 +11,7 @@ class Guest_Controller extends Base_Controller
 	{
 		parent::__construct();
 
-		$force_method = ['logout'];
-
-		if ($this->auth->check() && !in_array($this->getData('meta.method'), $force_method)) {
+		if ($this->auth->check() && !in_array($this->getData('meta.method'), $this->force_method_request)) {
 			redirect('/', 'refresh');
 		}
 	}

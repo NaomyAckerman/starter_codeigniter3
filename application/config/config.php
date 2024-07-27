@@ -3,8 +3,6 @@ defined('BASEPATH') or exit('No direct script access allowed');
 
 $config['app_name'] = env('APP_NAME');
 
-$config['upload_path'] = STORAGEPATH . "framework/uploads/";
-
 /*
 |--------------------------------------------------------------------------
 | Base Site URL
@@ -151,7 +149,7 @@ $config['subclass_prefix'] = 'MY_';
 | Note: This will NOT disable or override the CodeIgniter-specific
 |	autoloading (application/config/autoload.php)
 */
-$config['composer_autoload'] = FCPATH . 'vendor/autoload.php';
+$config['composer_autoload'] = FCPATH . "vendor" . DIRECTORY_SEPARATOR . "autoload.php";
 
 /*
 |--------------------------------------------------------------------------
@@ -253,7 +251,7 @@ $config['log_threshold'] = env('LOG_LEVEL', 0);
 | application/logs/ directory. Use a full server path with trailing slash.
 |
 */
-$config['log_path'] = STORAGEPATH . 'logs/';
+$config['log_path'] = STORAGEPATH . 'logs' . DIRECTORY_SEPARATOR;
 
 /*
 |--------------------------------------------------------------------------
@@ -312,7 +310,7 @@ $config['error_views_path'] = '';
 | application/cache/ directory.  Use a full server path with trailing slash.
 |
 */
-$config['cache_path'] = STORAGEPATH . 'framework/cache/';
+$config['cache_path'] = STORAGEPATH . 'framework' . DIRECTORY_SEPARATOR . 'cache' . DIRECTORY_SEPARATOR;
 
 /*
 |--------------------------------------------------------------------------
@@ -479,7 +477,7 @@ $config['global_xss_filtering'] = FALSE;
 
 $config['csrf_protection'] = env('CSRF_PROTECTION');
 $config['csrf_token_name'] = env('CSRF_TOKEN_NAME');
-$config['csrf_cookie_name'] = env('CSRD_COOKIE_NAME');
+$config['csrf_cookie_name'] = env('CSRF_COOKIE_NAME');
 $config['csrf_expire'] = env('CSRF_EXPIRE');
 $config['csrf_regenerate'] = env('CSRF_REGENERATE');
 $config['csrf_exclude_uris'] = [];

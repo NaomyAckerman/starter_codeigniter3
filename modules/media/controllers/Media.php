@@ -16,11 +16,14 @@ class Media extends Base_Controller
 		$ext = strtolower($ext ? ".$ext" : '');
 		$secure_path = $path_info['filename'];
 		$path = base64_decode(urldecode($secure_path)) . $ext;
-		$file = str_replace('/', '\\', ASSETPATH . 'storage' . DIRECTORY_SEPARATOR . $path);
+		$file = parse_dir_separator(ASSETPATH . 'storage' . DIRECTORY_SEPARATOR . $path);
 		if (!file_exists($file))
 			show_404();
-		$mime_type = mime_content_type($file);
-		if ($mime_type == 'directory')
+		// $mime_type = mime_content_type($file);
+		// if ($mime_type == 'directory')
+		// 	show_404();
+		$mime_type = get_mime_by_extension($file);
+		if (!$mime_type)
 			show_404();
 		header('Content-Type: ' . $mime_type);
 		echo file_get_contents($file);

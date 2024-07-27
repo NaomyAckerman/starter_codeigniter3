@@ -848,6 +848,19 @@ if ( ! function_exists('function_usable'))
 	}
 
 	// ? Custom Functions
+	
+	if (!function_exists('parse_dir_separator')) {		
+		/**
+		 * parse directory separator to support directory separator current OS
+		 *
+		 * @param  string $path
+		 * @return string
+		 */
+		function parse_dir_separator($path)
+		{
+			return str_replace('/', DIRECTORY_SEPARATOR, str_replace('\\', DIRECTORY_SEPARATOR, $path));
+		}
+	}
 
 	if (!function_exists('if_null')) {		
 		/**
@@ -1031,14 +1044,19 @@ if ( ! function_exists('function_usable'))
 		/**
 		 * Gets the value of an environment variable.
 		 *
-		 * @param  string  $key
-		 * @param  mixed  $default
+		 * @param  string  	$key
+		 * @param  mixed  	$default if environment variable not found or empty
 		 * @return mixed
 		 */
-		function env($key, $default = null)
+		function env($key, $default = "")
 		{
-			$value = $_ENV[$key] ?? null;
-			if ($value === null || $value === "") return $default ?? $value;
+			$value = $_ENV[$key] ?? $default;
+			if (strtolower($value) === "null") {
+				return null;
+			}
+			if ($value === "") {
+				return $default;
+			}
 			return json_decode($value) ?? $value;
 		}
 	}

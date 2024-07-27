@@ -10,6 +10,7 @@ class Link extends Cli_Controller
 	// ? run : composer storage:link || php index.php link run
 	public function run()
 	{
+		$this->config->load('upload');
 		$target = config_item('upload_path');
 		$link = ASSETPATH . 'storage';
 		if (!windows_os()) {

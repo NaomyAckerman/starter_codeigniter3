@@ -62,6 +62,7 @@ $autoload['libraries'] = [
 	'session',
 	'user_agent',
 	'email',
+	'upload',
 	'form_validation',
 	'my_auth' => 'auth',
 	'my_config_web' => 'config_web',

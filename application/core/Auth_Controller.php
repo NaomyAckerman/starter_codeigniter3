@@ -12,16 +12,8 @@ class Auth_Controller extends Base_Controller
 		parent::__construct();
 
 		if (!$this->auth->check()) {
-			redirect('login', 'refresh');
+			redirect('/', 'refresh');
 		}
-
-		$this->auth->recheckSessionAccess();
-
-		$this->setData('auth', [
-			'user_id' => $this->auth->currentId(),
-			'roles' => $this->auth->getRoles(),
-			'permissions' => $this->auth->getPermissions(),
-		]);
 	}
 }
 

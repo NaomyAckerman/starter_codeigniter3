@@ -16,17 +16,23 @@ class Media extends Test_Controller
 		$ext = strtolower($ext ? ".$ext" : '');
 		$secure_path = $path_info['filename'];
 		$path = base64_decode(urldecode($secure_path)) . $ext;
-		$file = str_replace('/', '\\', ASSETPATH . 'storage' . DIRECTORY_SEPARATOR . $path);
+		$file = parse_dir_separator(ASSETPATH . 'storage' . DIRECTORY_SEPARATOR . $path);
 		if (!file_exists($file))
 			show_404();
+		// $mime_type = mime_content_type($file);
+		// if ($mime_type == 'directory')
+		// 	show_404();
+		$mime_type = get_mime_by_extension($file);
+		if (!$mime_type)
+			show_404();
 		$this->responseJson([
-			"Support curl" => (extension_loaded('curl') ? 'Active' : 'Inactive'),
-			"Support allow_url_fopen" => (ini_get('allow_url_fopen') ? 'Active' : 'Inactive'),
-			"Path Info" => pathinfo($file),
-			"Secure Path" => $secure_path . $ext,
-			"Path" => $path,
-			"Full Path" => $file,
-			"Link" => storage($path, true)
+			"support_curl" => (extension_loaded('curl') ? 'Active' : 'Inactive'),
+			"support_allow_url_fopen" => (ini_get('allow_url_fopen') ? 'Active' : 'Inactive'),
+			"path_info" => pathinfo($file),
+			"secure_path" => $secure_path . $ext,
+			"path" => $path,
+			"full_path" => $file,
+			"link" => storage($path, true)
 		]);
 	}
 }
