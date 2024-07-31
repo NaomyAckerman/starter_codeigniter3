@@ -12,3 +12,5 @@ class Welcome extends Base_Controller
 		$this->display('welcome_v');
 	}
 }
+
+/* End of file Welcome.php */

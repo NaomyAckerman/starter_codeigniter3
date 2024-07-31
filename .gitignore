@@ -4,12 +4,7 @@
 .vscode
 
 assets/storage
-assets/*/*
-!assets/*/.gitkeep
-!assets/favicon.ico
-!assets/index.html
-!assets/js
-!assets/css
+assets/plugins
 
 storage/cronjobs/*
 !storage/cronjobs/index.html
