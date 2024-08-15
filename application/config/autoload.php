@@ -66,7 +66,7 @@ $autoload['libraries'] = [
 	'form_validation',
 	'my_auth' => 'auth',
 	'my_config_web' => 'config_web',
-	'my_alpha' => 'alpha'
+	'my_custom' => 'custom'
 ];
 if (env('DB_DATABASE'))
 	array_unshift($autoload['libraries'], 'database');

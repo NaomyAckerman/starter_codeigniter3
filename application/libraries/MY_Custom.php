@@ -1,6 +1,6 @@
 <?php defined('BASEPATH') or exit('No direct script access allowed');
 
-class MY_Alpha
+class MY_Custom
 {
 	use CI_Instance;
 	use CI_Type;
@@ -10,4 +10,4 @@ class MY_Alpha
 	}
 }
 
-/* End of file MY_Alpha.php */
+/* End of file MY_Custom.php */

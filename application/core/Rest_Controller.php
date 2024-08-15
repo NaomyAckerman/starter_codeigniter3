@@ -8,7 +8,7 @@ defined('BASEPATH') or exit('No direct script access allowed');
  * * // Custom Library Type ------------------------------------------------------------------------
  * If you want the cast type to be loaded globally, you can register it in the CI_Type trait
  * @property MY_Config_Web		 $config_web
- * @property MY_Alpha		     $alpha
+ * @property MY_Custom		     $custom
  */
 class Rest_Controller extends RestController
 {
