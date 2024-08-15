@@ -1,4 +1,4 @@
-APP_NAME="PT Alpha Tech Indonesiana"
+APP_NAME="CodeIgniter"
 APP_ENV=development
 APP_KEY=47997dd5283e70c9e28ae561d8148600 # => bin2hex(random_bytes(16));
 APP_URL=

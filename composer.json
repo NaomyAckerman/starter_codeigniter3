@@ -1,8 +1,8 @@
 {
-	"description": "PT Alpha Tech Indonesiana - Starter Framework CodeIgniter 3",
-	"name": "alphatech/starter_codeigniter3",
+	"description": "CodeIgniter - Starter CodeIgniter 3",
+	"name": "codeigniter/starter_codeigniter3",
 	"type": "project",
-	"homepage": "https://alphatechin.id",
+	"homepage": "https://www.codeigniter.com/",
 	"license": "MIT",
 	"support": {
 		"forum": "http://forum.codeigniter.com/",
