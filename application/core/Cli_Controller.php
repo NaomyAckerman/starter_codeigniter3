@@ -13,7 +13,7 @@ class Cli_Controller extends MX_Controller
 	public function __construct()
 	{
 		parent::__construct();
-		is_cli() && $this->router->fetch_method() == 'index' ?: show_404();
+		is_cli() && $this->router->fetch_method() == 'run' ?: show_404();
 	}
 }
 

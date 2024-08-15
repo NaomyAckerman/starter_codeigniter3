@@ -7,7 +7,7 @@ class Link extends Cli_Controller
 		parent::__construct();
 	}
 
-	// ? run : composer storage:link || php index.php link run
+	// ? command : php index.php cli link run
 	public function run()
 	{
 		$this->config->load('upload');
