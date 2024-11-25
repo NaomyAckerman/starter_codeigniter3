@@ -64,13 +64,20 @@ $autoload['libraries'] = [
 	'email',
 	'upload',
 	'form_validation',
-	'my_auth' => 'auth',
-	'my_config_web' => 'config_web',
-	'my_custom' => 'custom'
+	'my_custom' => 'custom',
 ];
-if (env('DB_DATABASE'))
-	array_unshift($autoload['libraries'], 'database');
 
+if (env('DB_DATABASE')) // Put here the libraries that require a database connection
+	$autoload['libraries'] = array_merge($autoload['libraries'], [
+		'database',
+		'my_auth' => 'auth',
+		'my_config_web' => 'config_web',
+	]);
+
+if (env('DB_MIGRATION'))
+	$autoload['libraries']['migration'] = 'migration';
+else
+	unset($autoload['libraries']['migration']);
 /*
 | -------------------------------------------------------------------
 |  Auto-load Drivers
